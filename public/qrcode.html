@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>安全生产月 · 扫码进入</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: linear-gradient(135deg, #b71c1c 0%, #E8362A 40%, #ff6f00 80%, #FFD700 100%);
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 36px 32px 28px;
+    max-width: 420px; width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+  .top-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #b71c1c, #E8362A);
+    color: #fff; font-size: 12px; font-weight: 700;
+    padding: 4px 14px; border-radius: 20px;
+    letter-spacing: 1px; margin-bottom: 14px;
+  }
+  .title {
+    font-size: 22px; font-weight: 900;
+    color: #1a1a1a; line-height: 1.4;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    font-size: 13px; color: #888;
+    margin-bottom: 24px; line-height: 1.6;
+  }
+  .qr-wrap {
+    background: #fff;
+    border: 3px solid #f0f0f0;
+    border-radius: 18px;
+    padding: 18px;
+    display: inline-block;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .qr-corner {
+    position: absolute; width: 18px; height: 18px;
+    border-color: #E8362A; border-style: solid;
+  }
+  .qr-corner.tl { top: 6px; left: 6px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+  .qr-corner.tr { top: 6px; right: 6px; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+  .qr-corner.bl { bottom: 6px; left: 6px; border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+  .qr-corner.br { bottom: 6px; right: 6px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+  .qr-img { display: block; width: 220px; height: auto; image-rendering: pixelated; }
+  .scan-tip {
+    font-size: 15px; font-weight: 700;
+    color: #E8362A; margin-bottom: 6px;
+  }
+  .scan-sub { font-size: 12px; color: #aaa; margin-bottom: 22px; }
+  .info-row {
+    display: flex; gap: 8px; justify-content: center;
+    flex-wrap: wrap; margin-bottom: 20px;
+  }
+  .info-chip {
+    background: #FFF3E0; color: #E65100;
+    font-size: 12px; font-weight: 600;
+    padding: 5px 12px; border-radius: 20px;
+  }
+  .url-box {
+    background: #f8f9fa; border-radius: 10px;
+    padding: 10px 14px; font-size: 11px; color: #888;
+    word-break: break-all; margin-bottom: 18px;
+    border: 1px solid #eee;
+  }
+  .divider { height: 1px; background: #f0f0f0; margin: 14px 0; }
+  .footer { font-size: 11px; color: #ccc; line-height: 1.7; }
+  .flame-row { font-size: 22px; letter-spacing: 4px; margin-bottom: 8px; }
+
+  @media print {
+    body { background: none !important; padding: 0; }
+    .card { box-shadow: none; border: 1px solid #eee; }
+    .no-print { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="flame-row">🔥🧯⚡🦺🏗️</div>
+  <div class="top-badge">🛡️ 2026安全生产月专项活动</div>
+  <div class="title">人人讲安全<br>个个会应急</div>
+  <div class="subtitle">排查整治风险隐患 · 2026安全生产月</div>
+
+  <div class="qr-wrap">
+    <div class="qr-corner tl"></div>
+    <div class="qr-corner tr"></div>
+    <div class="qr-corner bl"></div>
+    <div class="qr-corner br"></div>
+    <img class="qr-img" src="qrcode.png" alt="扫码参与安全生产月活动">
+  </div>
+
+  <div class="scan-tip">📱 微信扫一扫 立即参与</div>
+  <div class="scan-sub">扫描上方二维码，注册登录后即可上报隐患</div>
+
+  <div class="info-row">
+    <div class="info-chip">🧯 消防安全</div>
+    <div class="info-chip">⚡ 用电安全</div>
+    <div class="info-chip">🏗️ 施工安全</div>
+    <div class="info-chip">🦺 人员安全</div>
+    <div class="info-chip">🏢 建筑物安全</div>
+  </div>
+
+  <div class="url-box">https://c3deb77057b448bcb4c2a7d84057e783.app.codebuddy.work</div>
+
+  <div class="no-print" style="margin-bottom:12px">
+    <button onclick="window.print()" style="background:linear-gradient(135deg,#b71c1c,#E8362A);color:#fff;border:none;border-radius:10px;padding:11px 28px;font-size:14px;font-weight:700;cursor:pointer;margin-right:8px;">🖨️ 打印张贴</button>
+    <button onclick="downloadQR()" style="background:#fff;color:#E8362A;border:2px solid #E8362A;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;">⬇️ 下载二维码</button>
+  </div>
+
+  <div class="divider"></div>
+  <div class="footer">
+    发现隐患上报得分 · 整改完成额外积分 · 参与积分排行榜<br>
+    重大隐患20+30分 · 较大隐患10+15分 · 一般隐患5+8分
+  </div>
+</div>
+
+<script>
+function downloadQR() {
+  const a = document.createElement('a');
+  a.download = '安全生产月扫码入口.png';
+  a.href = 'qrcode.png';
+  a.click();
+}
+</script>
+</body>
+</html>

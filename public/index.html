@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>安全生产月 | 人人讲安全 个个会应急</title>
+<script src="hazard-rules.js"></script>
+<style>
+  :root {
+    --red: #E8362A;
+    --orange: #FF6B35;
+    --yellow: #FFD700;
+    --green: #27AE60;
+    --blue: #1565C0;
+    --dark: #1a1a2e;
+    --card-bg: #fff;
+    --text: #222;
+    --sub: #666;
+    --border: #e5e5e5;
+    --shadow: 0 4px 20px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'PingFang SC', 'Helvetica Neue', sans-serif; background: #f4f5f7; color: var(--text); min-height: 100vh; }
+
+  /* ── 顶部横幅 ── */
+  .banner {
+    background: linear-gradient(135deg, #b71c1c 0%, #E8362A 40%, #ff6f00 100%);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .banner::before {
+    content: '';
+    position: absolute; top: -30px; right: -30px;
+    width: 160px; height: 160px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+  .banner-inner { padding: 20px 18px 16px; position: relative; z-index: 1; }
+  .banner-tag {
+    display: inline-block;
+    background: rgba(255,255,255,0.22);
+    color: #fff;
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    letter-spacing: 1px; margin-bottom: 8px;
+  }
+  .banner h1 {
+    color: #fff; font-size: 20px; font-weight: 800;
+    line-height: 1.35; text-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  }
+  .banner-sub {
+    color: rgba(255,255,255,0.88); font-size: 12px;
+    margin-top: 6px; line-height: 1.5;
+  }
+  .banner-date {
+    position: absolute; top: 18px; right: 18px;
+    background: rgba(255,255,255,0.18);
+    color: #fff; font-size: 11px; font-weight: 700;
+    padding: 4px 10px; border-radius: 12px;
+  }
+  .flame-row {
+    display: flex; gap: 4px; margin-top: 10px;
+    font-size: 18px;
+  }
+
+  /* ── 页面容器 ── */
+  .page { display: none; }
+  .page.active { display: block; }
+  .content { padding: 16px; max-width: 480px; margin: 0 auto; }
+
+  /* ── 用户信息栏 ── */
+  .user-bar {
+    background: #fff; border-radius: 12px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: var(--shadow); margin-bottom: 14px;
+  }
+  .user-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--red), var(--orange));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: #fff; flex-shrink: 0;
+  }
+  .user-info { flex: 1; }
+  .user-name { font-size: 15px; font-weight: 700; }
+  .user-store { font-size: 12px; color: var(--sub); margin-top: 1px; }
+  .user-score-badge {
+    background: linear-gradient(135deg, var(--red), var(--orange));
+    color: #fff; border-radius: 20px;
+    padding: 4px 12px; font-size: 13px; font-weight: 700;
+    text-align: center;
+  }
+  .user-score-badge small { font-size: 10px; font-weight: 400; display: block; }
+
+  /* ── 统计卡片 ── */
+  .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 14px; }
+  .stat-card {
+    background: #fff; border-radius: 12px;
+    padding: 14px 10px; text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .stat-card .num { font-size: 26px; font-weight: 800; color: var(--red); line-height: 1; }
+  .stat-card .label { font-size: 11px; color: var(--sub); margin-top: 4px; }
+
+  /* ── 区域标题 ── */
+  .section-title {
+    font-size: 15px; font-weight: 700;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+  }
+  .section-title .dot { width: 4px; height: 16px; background: var(--red); border-radius: 2px; }
+
+  /* ── 安全分类卡片 ── */
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .cat-card {
+    border-radius: 14px; padding: 16px 14px;
+    cursor: pointer; transition: transform .15s, box-shadow .15s;
+    position: relative; overflow: hidden; min-height: 110px;
+  }
+  .cat-card:active { transform: scale(0.97); }
+  .cat-card .cat-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+  .cat-card .cat-name { font-size: 14px; font-weight: 700; color: #fff; }
+  .cat-card .cat-count { font-size: 11px; color: rgba(255,255,255,0.8); margin-top: 3px; }
+  .cat-card .cat-arrow {
+    position: absolute; bottom: 10px; right: 12px;
+    font-size: 20px; color: rgba(255,255,255,0.5);
+  }
+  .cat-card::after {
+    content: ''; position: absolute;
+    top: -20px; right: -20px;
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+  }
+  .cat-fire   { background: linear-gradient(135deg, #b71c1c, #E8362A); }
+  .cat-elec   { background: linear-gradient(135deg, #e65100, #FF9800); }
+  .cat-const  { background: linear-gradient(135deg, #1565C0, #42A5F5); }
+  .cat-person { background: linear-gradient(135deg, #2E7D32, #66BB6A); }
+  .cat-build  { background: linear-gradient(135deg, #4527A0, #7E57C2); }
+
+  /* ── 我的记录 ── */
+  .hazard-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .hazard-card {
+    background: #fff; border-radius: 14px;
+    padding: 14px 16px; box-shadow: var(--shadow);
+    cursor: pointer; transition: transform .15s;
+  }
+  .hazard-card:active { transform: scale(0.98); }
+  .hazard-top { display: flex; align-items: flex-start; gap: 10px; }
+  .hazard-cat-badge {
+    padding: 3px 9px; border-radius: 8px;
+    font-size: 11px; font-weight: 600; flex-shrink: 0;
+    color: #fff;
+  }
+  .hazard-title { font-size: 14px; font-weight: 600; flex: 1; }
+  .hazard-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+  .hazard-time { font-size: 11px; color: var(--sub); }
+  .status-badge {
+    font-size: 11px; padding: 2px 10px; border-radius: 10px; font-weight: 600;
+  }
+  .status-pending  { background: #FFF3E0; color: #E65100; }
+  .status-completed { background: #E8F5E9; color: #2E7D32; }
+  .hazard-score { font-size: 12px; color: var(--red); font-weight: 700; margin-top: 6px; }
+
+  /* ── 底部导航 ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #fff; display: flex;
+    border-top: 1px solid var(--border);
+    z-index: 100; padding-bottom: env(safe-area-inset-bottom,0);
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+    max-width: 480px; margin: 0 auto;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; padding: 8px 0;
+    cursor: pointer; transition: color .15s;
+    font-size: 11px; color: var(--sub);
+  }
+  .nav-item .nav-icon { font-size: 22px; margin-bottom: 2px; }
+  .nav-item.active { color: var(--red); }
+
+  /* ── 悬浮上报按钮 ── */
+  .fab {
+    position: fixed; bottom: 72px; right: 20px;
+    width: 58px; height: 58px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--red), var(--orange));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(232,54,42,0.45);
+    cursor: pointer; font-size: 28px; color: #fff;
+    z-index: 200; transition: transform .15s;
+  }
+  .fab:active { transform: scale(0.93); }
+
+  /* ── 表单 ── */
+  .form-card {
+    background: #fff; border-radius: 14px;
+    padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+  .form-label .req { color: var(--red); }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 14px; font-family: inherit;
+    background: #fafafa; color: var(--text);
+    transition: border-color .2s;
+    appearance: none; -webkit-appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none; border-color: var(--red); background: #fff;
+  }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%23999'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+  .level-row { display: flex; gap: 8px; }
+  .level-btn {
+    flex: 1; padding: 9px 0; border: 1.5px solid var(--border);
+    border-radius: 10px; text-align: center; cursor: pointer;
+    font-size: 13px; font-weight: 600; transition: all .15s;
+    background: #fafafa;
+  }
+  .level-btn.selected-major { background: #b71c1c; color: #fff; border-color: #b71c1c; }
+  .level-btn.selected-significant { background: #E65100; color: #fff; border-color: #E65100; }
+  .level-btn.selected-general { background: var(--green); color: #fff; border-color: var(--green); }
+  .photo-upload {
+    width: 100%; height: 90px; border: 2px dashed var(--border);
+    border-radius: 10px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer; color: var(--sub); gap: 4px; font-size: 12px;
+    background: #fafafa; transition: border-color .2s;
+  }
+  .photo-upload:hover { border-color: var(--red); }
+  .photo-upload-icon { font-size: 28px; }
+  .photo-preview {
+    width: 100%; border-radius: 10px; max-height: 200px;
+    object-fit: cover; display: none; margin-top: 6px;
+  }
+  .btn-primary {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--red), var(--orange));
+    color: #fff; border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700; cursor: pointer;
+    letter-spacing: 1px; transition: opacity .2s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+  .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-secondary {
+    width: 100%; padding: 13px;
+    background: #f4f5f7; color: var(--text);
+    border: 1.5px solid var(--border); border-radius: 12px;
+    font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .input-error { border-color: #E8362A !important; background: #FFF5F5 !important; }
+  .error-msg { color: #E8362A; font-size: 12px; margin-top: 5px; display: none; }
+  .error-msg.show { display: block; }
+  .form-bottom-pad { padding-bottom: 100px; }
+
+  /* ── 自动识别结果 ── */
+  .ai-result-box {
+    background: #fff; border-radius: 12px; padding: 14px; margin-bottom: 14px;
+    border: 1.5px solid var(--border); display: none;
+    animation: slideUp .25s ease;
+  }
+  .ai-result-box.show { display: block; }
+  .ai-result-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .ai-result-header .ai-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 700; color: #fff; padding: 3px 10px; border-radius: 20px;
+  }
+  .ai-tag-major { background: linear-gradient(135deg, #b71c1c, #E8362A); }
+  .ai-tag-significant { background: linear-gradient(135deg, #E65100, #FF9800); }
+  .ai-tag-general { background: linear-gradient(135deg, #2E7D32, #66BB6A); }
+  .ai-result-header .ai-confidence { font-size: 11px; color: #888; }
+  .ai-result-level { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .ai-result-level.level-major { color: #b71c1c; }
+  .ai-result-level.level-significant { color: #E65100; }
+  .ai-result-level.level-general { color: #2E7D32; }
+  .ai-result-law { font-size: 11px; color: #888; margin-bottom: 6px; padding-left: 8px; border-left: 3px solid #ddd; line-height: 1.5; }
+  .ai-result-desc { font-size: 12px; color: #555; line-height: 1.6; background: #f9f9f9; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+  .ai-result-kws { font-size: 11px; color: #888; margin-bottom: 10px; }
+  .ai-result-kws span { display: inline-block; background: #FFF3E0; color: #E65100; padding: 2px 6px; border-radius: 4px; margin: 2px; font-size: 10px; }
+  .ai-result-actions { display: flex; gap: 8px; }
+  .ai-result-actions button { flex: 1; padding: 10px; border-radius: 10px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .ai-btn-confirm { background: linear-gradient(135deg, var(--red), var(--orange)); color: #fff; }
+  .ai-btn-adjust { background: #f4f5f7; color: var(--text); border: 1.5px solid var(--border) !important; }
+  .ai-analyzing { text-align: center; padding: 12px; color: #888; font-size: 13px; }
+  .ai-analyzing .dots::after { content: ''; animation: dots 1.5s steps(3, end) infinite; }
+  @keyframes dots { 0% { content: ''; } 33% { content: '.'; } 66% { content: '..'; } 100% { content: '...'; } }
+  .level-row.ai-mode .level-btn { pointer-events: none; opacity: 0.4; }
+  .level-row.ai-mode .level-btn.ai-selected { pointer-events: auto; opacity: 1; }
+  .ai-badge { display: inline-flex; align-items: center; gap: 3px; background: linear-gradient(135deg, #4527A0, #7C4DFF); color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
+
+  /* ── 排行榜 ── */
+  .rank-tabs { display: flex; gap: 0; margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); }
+  .rank-tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; background: #fff; color: var(--sub); }
+  .rank-tab.active { background: var(--red); color: #fff; }
+  .rank-item {
+    background: #fff; border-radius: 14px;
+    padding: 14px 16px; box-shadow: var(--shadow);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+  }
+  .rank-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px; flex-shrink: 0;
+  }
+  .rank-1 { background: #FFD700; color: #7d5c00; }
+  .rank-2 { background: #C0C0C0; color: #555; }
+  .rank-3 { background: #cd7f32; color: #fff; }
+  .rank-n { background: #f0f0f0; color: var(--sub); }
+  .rank-info { flex: 1; }
+  .rank-name { font-size: 14px; font-weight: 700; }
+  .rank-store { font-size: 11px; color: var(--sub); margin-top: 2px; }
+  .rank-score { font-size: 20px; font-weight: 800; color: var(--red); }
+  .rank-score small { font-size: 11px; color: var(--sub); font-weight: 400; }
+
+  /* ── 登录/注册 ── */
+  .login-wrap {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #b71c1c 0%, #E8362A 40%, #ff6f00 80%, #FFD700 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 30px 24px;
+  }
+  .login-logo { font-size: 64px; margin-bottom: 10px; }
+  .login-title { color: #fff; font-size: 22px; font-weight: 800; text-align: center; line-height: 1.35; margin-bottom: 6px; }
+  .login-sub { color: rgba(255,255,255,0.82); font-size: 13px; text-align: center; margin-bottom: 30px; }
+  .login-card { background: #fff; border-radius: 20px; padding: 24px 22px; width: 100%; max-width: 360px; box-shadow: 0 8px 40px rgba(0,0,0,0.18); }
+  .login-card h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+  .login-tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+  .login-tab { flex: 1; text-align: center; padding: 10px; font-size: 14px; font-weight: 600; cursor: pointer; color: var(--sub); border-bottom: 3px solid transparent; margin-bottom: -2px; }
+  .login-tab.active { color: var(--red); border-bottom-color: var(--red); }
+
+  /* ── 隐患详情弹窗 ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    z-index: 300; display: none; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-sheet {
+    background: #fff; border-radius: 22px 22px 0 0;
+    padding: 20px 18px 30px; width: 100%; max-width: 480px;
+    max-height: 85vh; overflow-y: auto;
+    animation: slideUp .25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .modal-handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+  .modal-title { font-size: 17px; font-weight: 800; margin-bottom: 14px; }
+  .detail-row { display: flex; margin-bottom: 10px; }
+  .detail-label { font-size: 13px; color: var(--sub); width: 70px; flex-shrink: 0; }
+  .detail-value { font-size: 13px; flex: 1; font-weight: 500; }
+  .detail-img { width: 100%; border-radius: 10px; margin: 8px 0; max-height: 180px; object-fit: cover; }
+  .score-row { background: #FFF3E0; border-radius: 10px; padding: 12px; margin: 12px 0; display: flex; gap: 16px; align-items: center; }
+  .score-item { text-align: center; flex: 1; }
+  .score-item .sv { font-size: 22px; font-weight: 800; color: var(--red); }
+  .score-item .sl { font-size: 11px; color: var(--sub); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0.9);
+    background: rgba(0,0,0,0.78); color: #fff;
+    padding: 12px 24px; border-radius: 12px; font-size: 14px;
+    z-index: 999; opacity: 0; transition: all .25s;
+    text-align: center; max-width: 260px;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+
+  .pb { padding-bottom: 80px; }
+  .mt8 { margin-top: 8px; }
+  .empty-tip { text-align: center; color: var(--sub); font-size: 13px; padding: 30px 0; }
+  .empty-tip .empty-icon { font-size: 40px; margin-bottom: 8px; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .tip-box { background: #FFF8E1; border-radius: 10px; padding: 10px 14px; font-size: 12px; color: #8d6e00; margin-bottom: 14px; line-height: 1.6; }
+  .tip-box strong { color: #E65100; }
+
+  /* ── 管理后台 ── */
+  .admin-login-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 400;
+    display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .admin-login-overlay.open { display: flex; }
+  .admin-login-box {
+    background: #fff; border-radius: 18px; padding: 28px 24px; width: 100%; max-width: 340px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideUp .25s ease;
+  }
+  .admin-login-box h3 { font-size: 18px; font-weight: 800; text-align: center; margin-bottom: 4px; }
+  .admin-login-box p { font-size: 12px; color: #888; text-align: center; margin-bottom: 18px; }
+  .admin-login-box input {
+    width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+    font-size: 14px; margin-bottom: 12px; font-family: inherit;
+  }
+  .admin-login-box input:focus { outline: none; border-color: var(--red); }
+  .admin-login-box .admin-btns { display: flex; gap: 10px; }
+  .admin-login-box .admin-btns button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .admin-login-box .btn-confirm { background: linear-gradient(135deg, var(--red), var(--orange)); color: #fff; }
+  .admin-login-box .btn-cancel { background: #f4f5f7; color: var(--text); }
+  .admin-login-box .login-err { color: var(--red); font-size: 12px; text-align: center; margin-top: 8px; }
+
+  .admin-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 14px; }
+  .admin-stat-card {
+    background: #fff; border-radius: 12px; padding: 14px; box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .admin-stat-card .as-num { font-size: 26px; font-weight: 800; }
+  .admin-stat-card .as-label { font-size: 12px; color: var(--sub); margin-top: 4px; }
+  .admin-tabs { display: flex; gap: 0; margin-bottom: 14px; border-radius: 10px; overflow: hidden; border: 1.5px solid var(--border); }
+  .admin-tab { flex: 1; padding: 10px; text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; background: #fff; color: var(--sub); }
+  .admin-tab.active { background: var(--red); color: #fff; }
+  .admin-list-item {
+    background: #fff; border-radius: 12px; padding: 14px; box-shadow: var(--shadow);
+    margin-bottom: 10px; font-size: 13px;
+  }
+  .admin-list-item .ali-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .admin-list-item .ali-title { font-weight: 700; font-size: 14px; }
+  .admin-list-item .ali-meta { color: var(--sub); font-size: 12px; margin-top: 4px; }
+  .admin-badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+  .admin-badge-major { background: #FFEBEE; color: #c62828; }
+  .admin-badge-sig { background: #FFF3E0; color: #E65100; }
+  .admin-badge-gen { background: #FFFDE7; color: #F57F17; }
+  .admin-badge-pending { background: #FFF3E0; color: #E65100; }
+  .admin-badge-done { background: #E8F5E9; color: #2E7D32; }
+  .admin-filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .admin-filter-bar select, .admin-filter-bar input {
+    padding: 7px 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 12px; font-family: inherit; flex: 1; min-width: 80px;
+  }
+  .admin-empty { text-align: center; color: var(--sub); padding: 30px 0; font-size: 13px; }
+  .admin-export-btns { display: flex; flex-direction: column; gap: 10px; }
+  .admin-export-btns button {
+    padding: 14px; border-radius: 12px; border: none; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  .admin-btn-red { background: linear-gradient(135deg, var(--red), var(--orange)); color: #fff; }
+  .admin-btn-green { background: var(--green); color: #fff; }
+  .admin-btn-outline { background: #fff; color: var(--red); border: 1.5px solid var(--red) !important; }
+  .admin-detail-img { width: 100%; border-radius: 10px; margin: 8px 0; max-height: 200px; object-fit: cover; }
+
+  /* ── 加载中 ── */
+  .loading-spinner { text-align: center; padding: 20px; color: var(--sub); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<!-- ===================== 登录/注册页 ===================== -->
+<div id="loginPage" class="page active">
+<div class="login-wrap">
+  <div class="login-logo">🏭</div>
+  <div class="login-title">人人讲安全<br>个个会应急</div>
+  <div class="login-sub">排查整治风险隐患 · 2026安全生产月</div>
+  <div class="login-card">
+    <div class="login-tabs">
+      <div class="login-tab active" onclick="switchLoginTab('login')">登录</div>
+      <div class="login-tab" onclick="switchLoginTab('register')">注册</div>
+    </div>
+    <div id="loginForm">
+      <div class="form-group">
+        <label class="form-label">手机号 <span class="req">*</span></label>
+        <input type="tel" class="form-input" id="loginPhone" placeholder="请输入注册手机号" maxlength="11">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">立即进入</button>
+      <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--sub);">首次使用请先注册</div>
+    </div>
+    <div id="registerForm" style="display:none">
+      <div class="form-group">
+        <label class="form-label">姓名 <span class="req">*</span></label>
+        <input type="text" class="form-input" id="regName" placeholder="请输入真实姓名">
+      </div>
+      <div class="form-group">
+        <label class="form-label">手机号 <span class="req">*</span></label>
+        <input type="tel" class="form-input" id="regPhone" placeholder="请输入手机号" maxlength="11">
+      </div>
+      <div class="form-group">
+        <label class="form-label">所在城市 <span class="req">*</span></label>
+        <input type="text" class="form-input" id="regCity" placeholder="如：北京、上海">
+      </div>
+      <div class="form-group">
+        <label class="form-label">门店名称 <span class="req">*</span></label>
+        <input type="text" class="form-input" id="regStore" placeholder="如：XX新能源汽车4S店">
+      </div>
+      <div class="form-group">
+        <label class="form-label">工作职务</label>
+        <select class="form-select" id="regRole">
+          <option>安保员</option><option>安保主管</option><option>区域机动岗</option><option>区域安保经理</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="doRegister()">注册并进入</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== 主页 ===================== -->
+<div id="homePage" class="page">
+<div class="banner">
+  <div class="banner-inner">
+    <div class="banner-tag">🔥 2026安全生产月</div>
+    <div class="banner-date">6月份专项活动</div>
+    <h1>人人讲安全<br>个个会应急</h1>
+    <div class="banner-sub">排查整治风险隐患 · 2026安全生产月</div>
+    <div class="flame-row">🔥🧯⚡🦺🏗️</div>
+  </div>
+</div>
+<div class="content pb">
+  <div style="height:14px"></div>
+  <div class="user-bar" id="userBar">
+    <div class="user-avatar">👷</div>
+    <div class="user-info">
+      <div class="user-name" id="barName">-</div>
+      <div class="user-store" id="barStore">-</div>
+    </div>
+    <div class="user-score-badge" id="barScore"><div>0</div><small>积分</small></div>
+  </div>
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card"><div class="num" id="statTotal">0</div><div class="label">发现隐患</div></div>
+    <div class="stat-card"><div class="num" id="statDone">0</div><div class="label">已整改</div></div>
+    <div class="stat-card"><div class="num" id="statScore">0</div><div class="label">总积分</div></div>
+  </div>
+  <div class="tip-box">💡 <strong>积分规则：</strong>发现隐患（重大20分/较大10分/一般5分），整改完成额外获得（重大30分/较大15分/一般8分）</div>
+  <div class="section-title"><div class="dot"></div>选择安全检查类别</div>
+  <div class="cat-grid" id="catGrid">
+    <div class="cat-card cat-fire" onclick="goReport('消防安全')"><span class="cat-icon">🧯</span><div class="cat-name">消防安全</div><div class="cat-count" id="cnt-消防安全">0 条隐患</div><div class="cat-arrow">›</div></div>
+    <div class="cat-card cat-elec" onclick="goReport('用电安全')"><span class="cat-icon">⚡</span><div class="cat-name">用电安全</div><div class="cat-count" id="cnt-用电安全">0 条隐患</div><div class="cat-arrow">›</div></div>
+    <div class="cat-card cat-const" onclick="goReport('施工安全')"><span class="cat-icon">🏗️</span><div class="cat-name">施工安全</div><div class="cat-count" id="cnt-施工安全">0 条隐患</div><div class="cat-arrow">›</div></div>
+    <div class="cat-card cat-person" onclick="goReport('人员安全')"><span class="cat-icon">🦺</span><div class="cat-name">人员安全</div><div class="cat-count" id="cnt-人员安全">0 条隐患</div><div class="cat-arrow">›</div></div>
+    <div class="cat-card cat-build" onclick="goReport('建筑物安全')" style="grid-column: span 2;"><span class="cat-icon">🏢</span><div class="cat-name">建筑物安全</div><div class="cat-count" id="cnt-建筑物安全">0 条隐患</div><div class="cat-arrow">›</div></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== 我的隐患 ===================== -->
+<div id="myPage" class="page">
+<div class="banner" style="background: linear-gradient(135deg,#1565C0,#42A5F5);">
+  <div class="banner-inner">
+    <div class="banner-tag">📋 隐患台账</div>
+    <h1>我的上报记录</h1>
+    <div class="banner-sub">点击卡片可提交整改情况</div>
+  </div>
+</div>
+<div class="content pb" style="padding-top:16px">
+  <div class="hazard-list" id="myHazardList"><div class="empty-tip"><div class="empty-icon">📋</div>暂无记录，去发现隐患吧！</div></div>
+  <div style="text-align:center;margin-top:20px;padding-bottom:20px">
+    <button onclick="showAdminLogin()" style="background:none;border:none;color:#bbb;font-size:12px;cursor:pointer;padding:8px 16px">🛡️ 管理员入口</button>
+  </div>
+</div>
+</div>
+
+<!-- ===================== 管理后台 ===================== -->
+<div id="adminPage" class="page">
+  <div class="banner" style="background: linear-gradient(135deg,#1a1a2e,#4527A0);">
+    <div class="banner-inner" style="position:relative">
+      <button onclick="exitAdminMode()" style="position:absolute;top:12px;left:12px;z-index:10;background:rgba(255,255,255,0.25);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">←</button>
+      <div class="banner-tag">🛡️ 管理后台</div>
+      <h1>安全生产月数据</h1>
+      <div class="banner-sub">全员隐患上报与整改情况总览</div>
+    </div>
+  </div>
+  <div class="content pb" style="padding-top:16px">
+    <div class="admin-stats" id="adminStats"></div>
+    <div class="admin-tabs">
+      <div class="admin-tab active" onclick="switchAdminTab('hazards', this)">隐患管理</div>
+      <div class="admin-tab" onclick="switchAdminTab('users', this)">人员管理</div>
+      <div class="admin-tab" onclick="switchAdminTab('ranking', this)">积分排行</div>
+      <div class="admin-tab" onclick="switchAdminTab('export', this)">数据导出</div>
+    </div>
+    <div id="adminTabHazards">
+      <div class="admin-filter-bar">
+        <select id="adminFilterCat" onchange="renderAdminHazards()"><option value="">全部类别</option><option>消防安全</option><option>用电安全</option><option>施工安全</option><option>人员安全</option><option>建筑物安全</option></select>
+        <select id="adminFilterLevel" onchange="renderAdminHazards()"><option value="">全部等级</option><option>重大</option><option>较大</option><option>一般</option></select>
+        <select id="adminFilterStatus" onchange="renderAdminHazards()"><option value="">全部状态</option><option value="pending">待整改</option><option value="completed">已整改</option></select>
+      </div>
+      <div id="adminHazardList"></div>
+    </div>
+    <div id="adminTabUsers" style="display:none"><div id="adminUserList"></div></div>
+    <div id="adminTabRanking" style="display:none">
+      <div class="rank-tabs">
+        <div class="rank-tab active" id="adminRankTabPerson" onclick="switchAdminRankTab('person')">个人榜</div>
+        <div class="rank-tab" id="adminRankTabStore" onclick="switchAdminRankTab('store')">门店榜</div>
+      </div>
+      <div id="adminRankList"></div>
+    </div>
+    <div id="adminTabExport" style="display:none">
+      <div class="admin-export-btns">
+        <button class="admin-btn-red" onclick="adminExportHazards()">📦 导出全部隐患数据（含照片）</button>
+        <button class="admin-btn-green" onclick="adminExportUsers()">⬇️ 导出人员积分数据（CSV）</button>
+        <button class="admin-btn-outline" onclick="adminExportRanking()">⬇️ 导出门店排行数据（CSV）</button>
+      </div>
+      <div class="tip-box mt8" style="margin-top:14px">💡 隐患数据导出为ZIP压缩包，包含CSV数据表 + photos照片文件夹。CSV中「隐患照片」「整改照片」列标注了对应照片文件名，打开photos文件夹即可对照查看。</div>
+      <div id="adminExportSummary" style="margin-top:14px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 管理员登录弹窗 -->
+<div class="admin-login-overlay" id="adminLoginOverlay" onclick="if(event.target===this)hideAdminLogin()">
+  <div class="admin-login-box">
+    <h3>🛡️ 管理员登录</h3>
+    <p>请输入管理后台密码</p>
+    <input type="password" id="adminPassInput" placeholder="密码" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    <div class="admin-btns">
+      <button class="btn-cancel" onclick="hideAdminLogin()">取消</button>
+      <button class="btn-confirm" onclick="doAdminLogin()">进入后台</button>
+    </div>
+    <div class="login-err" id="adminLoginErr"></div>
+    <div style="font-size:11px;color:#aaa;text-align:center;margin-top:10px">默认密码：safety2026</div>
+  </div>
+</div>
+
+<!-- ===================== 排行榜 ===================== -->
+<div id="rankPage" class="page">
+<div class="banner" style="background: linear-gradient(135deg,#4527A0,#7E57C2);">
+  <div class="banner-inner"><div class="banner-tag">🏆 积分排行</div><h1>排行榜</h1><div class="banner-sub">比一比，谁最能发现和消除隐患</div></div>
+</div>
+<div class="content pb" style="padding-top:16px">
+  <div class="rank-tabs">
+    <div class="rank-tab active" id="rankTabPerson" onclick="switchRankTab('person')">个人榜</div>
+    <div class="rank-tab" id="rankTabStore" onclick="switchRankTab('store')">门店榜</div>
+  </div>
+  <div id="rankList"></div>
+</div>
+</div>
+
+<!-- ===================== 上报页 ===================== -->
+<div id="reportPage" class="page">
+<div class="banner" style="background: linear-gradient(135deg,#b71c1c,#E8362A);">
+  <div class="banner-inner"><div class="banner-tag">⚠️ 隐患上报</div><h1 id="reportCatTitle">消防安全</h1><div class="banner-sub">发现隐患，立即上报，保护大家</div></div>
+</div>
+<div class="content pb" style="padding-top:16px">
+  <div class="tip-box" id="catTipBox"></div>
+  <div class="form-card">
+    <div class="form-group">
+      <label class="form-label">隐患标题 <span class="req">*</span> <span style="font-size:11px;color:#999;font-weight:400">（填写后将自动识别等级）</span></label>
+      <input type="text" class="form-input" id="fTitle" placeholder="简要描述隐患名称，如：消防疏散出口被锁闭" oninput="onTitleInputChange()">
+      <div class="error-msg" id="err-fTitle">请填写隐患标题</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">危险等级 <span class="req">*</span> <span class="ai-badge">🤖 智能识别</span></label>
+      <div class="ai-result-box" id="aiResultBox">
+        <div class="ai-result-header"><span class="ai-tag" id="aiResultTag">🤖 智能识别</span><span class="ai-confidence" id="aiConfidence"></span></div>
+        <div class="ai-result-level" id="aiResultLevel"></div>
+        <div class="ai-result-law" id="aiResultLaw"></div>
+        <div class="ai-result-desc" id="aiResultDesc"></div>
+        <div class="ai-result-kws" id="aiResultKws"></div>
+        <div class="ai-result-actions">
+          <button class="ai-btn-confirm" id="aiConfirmBtn" onclick="confirmAiLevel()">✅ 确认此等级</button>
+          <button class="ai-btn-adjust" onclick="showManualLevel()">✏️ 手动调整</button>
+        </div>
+      </div>
+      <div class="ai-analyzing" id="aiAnalyzing" style="display:none">🤖 正在智能分析隐患等级<span class="dots"></span></div>
+      <div class="level-row" id="levelRow" style="display:none">
+        <div class="level-btn" id="lvl-重大" onclick="selectLevel('重大')">🔴 重大</div>
+        <div class="level-btn" id="lvl-较大" onclick="selectLevel('较大')">🟠 较大</div>
+        <div class="level-btn" id="lvl-一般" onclick="selectLevel('一般')">🟡 一般</div>
+      </div>
+      <div class="error-msg" id="err-level">请确认危险等级</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">隐患位置 <span class="req">*</span></label>
+      <input type="text" class="form-input" id="fLocation" placeholder="如：展厅一楼、维修车间、停车场" oninput="clearError(this)">
+      <div class="error-msg" id="err-fLocation">请填写隐患位置</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">详细描述 <span class="req">*</span></label>
+      <textarea class="form-textarea" id="fDesc" placeholder="请详细描述隐患情况、发现时间、潜在风险等..." oninput="onDescInputChange()"></textarea>
+      <div class="error-msg" id="err-fDesc">请填写详细描述</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">现场照片</label>
+      <div class="photo-upload" onclick="document.getElementById('photoInput').click()"><div class="photo-upload-icon">📷</div><div>点击上传现场照片</div></div>
+      <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+      <img id="photoPreview" class="photo-preview">
+    </div>
+    <div id="submitError" style="color:#E8362A;font-size:13px;text-align:center;margin-bottom:10px;display:none;font-weight:600;"></div>
+    <button class="btn-primary" id="submitBtn" type="button" onclick="submitReport()">📤 提交上报</button>
+    <button class="btn-secondary" type="button" onclick="navTo('home')">取消</button>
+    <div style="height:20px"></div>
+  </div>
+</div>
+</div>
+
+<!-- ===================== 底部导航 ===================== -->
+<div class="bottom-nav" id="bottomNav" style="display:none">
+  <div class="nav-item active" id="nav-home" onclick="navTo('home')"><div class="nav-icon">🏠</div>首页</div>
+  <div class="nav-item" id="nav-report" onclick="navTo('report')"><div class="nav-icon">＋</div>上报</div>
+  <div class="nav-item" id="nav-my" onclick="navTo('my')"><div class="nav-icon">📋</div>我的</div>
+  <div class="nav-item" id="nav-rank" onclick="navTo('rank')"><div class="nav-icon">🏆</div>排行</div>
+</div>
+
+<!-- ===================== 隐患详情弹窗 ===================== -->
+<div class="modal-overlay" id="hazardModal" onclick="closeModal(event)">
+<div class="modal-sheet" id="modalSheet">
+  <div class="modal-handle"></div>
+  <div class="modal-title" id="mTitle"></div>
+  <div id="mBody"></div>
+  <div id="mRectifySection"></div>
+</div>
+</div>
+
+<!-- 删除确认弹窗 -->
+<div class="modal-overlay" id="deleteConfirmModal" onclick="closeDeleteConfirm(event)">
+<div class="modal-sheet" style="max-width:340px;text-align:center;padding:30px 24px">
+  <div style="font-size:40px;margin-bottom:12px">⚠️</div>
+  <div style="font-size:17px;font-weight:700;color:#1a1a2e;margin-bottom:8px" id="deleteConfirmTitle">确认删除？</div>
+  <div style="font-size:13px;color:#666;margin-bottom:24px" id="deleteConfirmMsg">此操作不可撤销</div>
+  <div style="display:flex;gap:12px">
+    <button style="flex:1;padding:10px;border:1px solid #ddd;border-radius:10px;background:#fff;font-size:14px;cursor:pointer" onclick="closeDeleteConfirm()">取消</button>
+    <button style="flex:1;padding:10px;border:none;border-radius:10px;background:#e63946;color:#fff;font-size:14px;font-weight:700;cursor:pointer" id="deleteConfirmBtn" onclick="executeDelete()">删除</button>
+  </div>
+</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ======================== 全局状态 ========================
+var currentUser = null;
+var selectedLevel = '';
+var selectedCat = '';
+var aiAnalysisResult = null;
+var aiLevelConfirmed = false;
+var aiAnalyzeTimer = null;
+var photoPath = '';  // 服务器端图片路径
+var photoFile = null; // 待上传的文件
+
+// API基础地址（自动检测）
+var API_BASE = '';
+
+// 协议检测：如果通过 file:// 打开，提示用户用服务器地址访问
+if (window.location.protocol === 'file:') {
+  alert('⚠️ 请勿直接打开HTML文件！\n\n请通过服务器地址访问：\nhttp://192.168.3.180:3000\n\n否则会出现"网络错误"无法提交数据。');
+}
+
+var CAT_TIPS = {
+  '消防安全': '⚠️ 检查要点：灭火器是否过期、消防通道是否畅通、充电区域是否有防火措施、消防标识是否完整、应急疏散图是否张贴',
+  '用电安全': '⚠️ 检查要点：电线是否老化裸露、开关箱是否上锁、大功率设备是否独立回路、充电桩是否规范安装、是否存在违规用电',
+  '施工安全': '⚠️ 检查要点：施工区域是否有围挡、工人是否佩戴安全帽、动火作业是否办理手续、高空作业是否系安全绳、施工材料是否规范堆放',
+  '人员安全': '⚠️ 检查要点：员工是否接受安全培训、是否存在违规操作、高风险岗位是否持证上岗、是否存在疲劳驾驶/操作、劳保用品是否正确佩戴',
+  '建筑物安全': '⚠️ 检查要点：屋顶是否有漏水渗漏、墙体是否有裂缝、地基是否有下沉、门窗是否完好、建筑材料是否合规、是否存在超负荷使用',
+};
+
+var CAT_COLORS = {
+  '消防安全': '#E8362A', '用电安全': '#FF9800',
+  '施工安全': '#42A5F5', '人员安全': '#66BB6A', '建筑物安全': '#7E57C2'
+};
+
+// ======================== API 工具函数 ========================
+function api(method, url, data) {
+  var fullUrl = API_BASE + url;
+  console.log('API请求:', method, fullUrl, data);
+  var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+  if (data) opts.body = JSON.stringify(data);
+  return fetch(fullUrl, opts).then(function(r) {
+    console.log('API响应:', r.status);
+    return r.json();
+  });
+}
+
+// ======================== 登录/注册 ========================
+function switchLoginTab(tab) {
+  document.querySelectorAll('.login-tab').forEach(function(t, i) {
+    t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+  });
+  document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? '' : 'none';
+}
+
+function doLogin() {
+  var phone = document.getElementById('loginPhone').value.trim();
+  if (!/^1\d{10}$/.test(phone)) { showToast('请输入正确的手机号'); return; }
+  api('POST', '/api/users/login', { phone: phone }).then(function(r) {
+    if (r.success) {
+      currentUser = r.user;
+      sessionStorage.setItem('sg_user', JSON.stringify(r.user));
+      enterApp();
+    } else {
+      showToast(r.msg);
+    }
+  }).catch(function() { showToast('网络错误，请检查网络后重试'); });
+}
+
+function doRegister() {
+  var name = document.getElementById('regName').value.trim();
+  var phone = document.getElementById('regPhone').value.trim();
+  var city = document.getElementById('regCity').value.trim();
+  var store = document.getElementById('regStore').value.trim();
+  var role = document.getElementById('regRole').value;
+  if (!name) { showToast('请输入姓名'); return; }
+  if (!/^1\d{10}$/.test(phone)) { showToast('请输入正确的手机号'); return; }
+  if (!city) { showToast('请输入城市'); return; }
+  if (!store) { showToast('请输入门店名称'); return; }
+  api('POST', '/api/users/register', { name: name, phone: phone, storeCity: city, storeName: store, role: role }).then(function(r) {
+    if (r.success) {
+      currentUser = r.user;
+      sessionStorage.setItem('sg_user', JSON.stringify(r.user));
+      enterApp();
+      showToast('注册成功，欢迎参与安全生产月活动！');
+    } else {
+      if (r.user) {
+        // 已注册，直接登录
+        currentUser = r.user;
+        sessionStorage.setItem('sg_user', JSON.stringify(r.user));
+        enterApp();
+        showToast('该手机号已注册，已自动登录');
+      } else {
+        showToast(r.msg);
+      }
+    }
+  }).catch(function(err) {
+    console.error('注册请求失败:', err);
+    var msg = '网络错误';
+    if (err && err.message) {
+      if (err.message.indexOf('Failed to fetch') !== -1) msg = '无法连接服务器，请确认电脑服务器已启动';
+      else if (err.message.indexOf('CORS') !== -1) msg = '跨域被阻止，请用 http://192.168.3.180:3000 访问';
+      else msg = err.message;
+    }
+    showToast(msg);
+  });
+}
+
+function enterApp() {
+  document.getElementById('loginPage').classList.remove('active');
+  document.getElementById('bottomNav').style.display = 'flex';
+  navTo('home');
+}
+
+// ======================== 页面导航 ========================
+var pages = { home: 'homePage', my: 'myPage', rank: 'rankPage', report: 'reportPage', admin: 'adminPage' };
+var adminMode = false;
+var adminTab = 'hazards';
+var adminRankTabMode = 'person';
+
+function navTo(name) {
+  if (adminMode && name !== 'admin') { exitAdminMode(); }
+  Object.keys(pages).forEach(function(k) {
+    var el = document.getElementById(pages[k]);
+    if (el) el.classList.toggle('active', k === name);
+  });
+  document.querySelectorAll('.nav-item').forEach(function(el) {
+    el.classList.remove('active');
+    if (el.id === 'nav-' + name) el.classList.add('active');
+  });
+  if (name === 'home') refreshHomeData();
+  if (name === 'my') renderMyHazards();
+  if (name === 'rank') renderRanking();
+  if (name === 'report' && !selectedCat) goReport('消防安全');
+  if (name === 'admin') renderAdminAll();
+  window.scrollTo(0, 0);
+}
+
+// ======================== 管理员模式 ========================
+function showAdminLogin() {
+  document.getElementById('adminLoginOverlay').classList.add('open');
+  document.getElementById('adminPassInput').value = '';
+  document.getElementById('adminLoginErr').textContent = '';
+  setTimeout(function() { document.getElementById('adminPassInput').focus(); }, 100);
+}
+function hideAdminLogin() { document.getElementById('adminLoginOverlay').classList.remove('open'); }
+function doAdminLogin() {
+  var pass = document.getElementById('adminPassInput').value.trim();
+  api('POST', '/api/admin/login', { password: pass }).then(function(r) {
+    if (r.success) { hideAdminLogin(); enterAdminMode(); }
+    else { document.getElementById('adminLoginErr').textContent = '密码错误，请重试'; }
+  }).catch(function() { document.getElementById('adminLoginErr').textContent = '网络错误'; });
+}
+function enterAdminMode() {
+  adminMode = true;
+  document.getElementById('bottomNav').style.display = 'none';
+  Object.keys(pages).forEach(function(k) { var el = document.getElementById(pages[k]); if (el) el.classList.remove('active'); });
+  document.getElementById('adminPage').classList.add('active');
+  window.scrollTo(0, 0);
+  renderAdminAll();
+}
+function exitAdminMode() {
+  adminMode = false;
+  document.getElementById('bottomNav').style.display = 'flex';
+  document.getElementById('adminPage').classList.remove('active');
+  document.getElementById('homePage').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(el) {
+    el.classList.remove('active');
+    if (el.id === 'nav-home') el.classList.add('active');
+  });
+}
+
+function renderAdminAll() {
+  try { renderAdminStats(); } catch(e) { console.error('[Admin] stats error:', e); }
+  try { renderAdminHazards(); } catch(e) { console.error('[Admin] hazards error:', e); }
+  try { renderAdminUsers(); } catch(e) { console.error('[Admin] users error:', e); }
+  try { renderAdminRanking(); } catch(e) { console.error('[Admin] ranking error:', e); }
+  try { renderAdminExportSummary(); } catch(e) { console.error('[Admin] export error:', e); }
+}
+
+function renderAdminStats() {
+  api('GET', '/api/admin/stats').then(function(s) {
+    document.getElementById('adminStats').innerHTML =
+      '<div class="admin-stat-card"><div class="as-num" style="color:#1565C0">' + s.userCount + '</div><div class="as-label">参与人数</div></div>' +
+      '<div class="admin-stat-card"><div class="as-num" style="color:#E8362A">' + s.hazardCount + '</div><div class="as-label">发现隐患</div></div>' +
+      '<div class="admin-stat-card"><div class="as-num" style="color:#2E7D32">' + s.completedCount + '</div><div class="as-label">已整改</div></div>' +
+      '<div class="admin-stat-card"><div class="as-num" style="color:#E65100">' + s.totalScore + '</div><div class="as-label">累计积分</div></div>';
+  }).catch(function() {});
+}
+
+function switchAdminTab(tab, el) {
+  adminTab = tab;
+  document.querySelectorAll('.admin-tab').forEach(function(t) { t.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  document.getElementById('adminTabHazards').style.display = tab === 'hazards' ? '' : 'none';
+  document.getElementById('adminTabUsers').style.display = tab === 'users' ? '' : 'none';
+  document.getElementById('adminTabRanking').style.display = tab === 'ranking' ? '' : 'none';
+  document.getElementById('adminTabExport').style.display = tab === 'export' ? '' : 'none';
+  if (tab === 'hazards') renderAdminHazards();
+  if (tab === 'users') renderAdminUsers();
+  if (tab === 'ranking') renderAdminRanking();
+  if (tab === 'export') renderAdminExportSummary();
+}
+
+function renderAdminHazards() {
+  var catEl = document.getElementById('adminFilterCat');
+  var levelEl = document.getElementById('adminFilterLevel');
+  var statusEl = document.getElementById('adminFilterStatus');
+  var cat = catEl ? catEl.value : '';
+  var level = levelEl ? levelEl.value : '';
+  var status = statusEl ? statusEl.value : '';
+  var url = '/api/hazards?';
+  if (cat) url += 'category=' + encodeURIComponent(cat) + '&';
+  if (level) url += 'level=' + encodeURIComponent(level) + '&';
+  if (status) url += 'status=' + encodeURIComponent(status);
+
+  api('GET', url).then(function(hazards) {
+    var list = document.getElementById('adminHazardList');
+    if (!hazards.length) {
+      list.innerHTML = '<div class="admin-empty">📋 暂无隐患数据<br><br><span style="font-size:12px;color:#999">数据保存在服务器端，所有设备共享。</span></div>';
+      return;
+    }
+    list.innerHTML = hazards.map(function(h) {
+      var photoHtml = h.photoPath ? '<img src="' + h.photoPath + '" class="admin-detail-img" style="display:none" data-hid="' + h.id + '">' : '';
+      return '<div class="admin-list-item" onclick="showAdminHazardDetail(\'' + h.id + '\')">' +
+        '<div class="ali-top"><div>' +
+          '<span class="admin-badge" style="background:' + (CAT_COLORS[h.category] || '#999') + '20;color:' + (CAT_COLORS[h.category] || '#999') + '">' + h.category + '</span> ' +
+          '<span class="admin-badge ' + (h.level === '重大' ? 'admin-badge-major' : h.level === '较大' ? 'admin-badge-sig' : 'admin-badge-gen') + '">' + h.level + '</span>' +
+        '</div>' +
+        '<span class="admin-badge ' + (h.status === 'completed' ? 'admin-badge-done' : 'admin-badge-pending') + '">' + (h.status === 'completed' ? '✅已整改' : '⏳待整改') + '</span></div>' +
+        '<div class="ali-title">' + h.title + (h.levelConfidence ? '<span style="font-size:10px;background:linear-gradient(135deg,#4527A0,#7C4DFF);color:#fff;padding:1px 6px;border-radius:8px;margin-left:6px;vertical-align:middle">🤖</span>' : '') + '</div>' +
+        '<div class="ali-meta">📍 ' + h.location + ' &nbsp;|&nbsp; ' + h.reporterName + ' &nbsp;|&nbsp; ' + h.storeName + ' &nbsp;|&nbsp; ' + (h.createdAt ? h.createdAt.slice(0, 10) : '') + ' &nbsp;|&nbsp; 🏅 ' + ((h.discoveryScore || 0) + (h.rectifyScore || 0)) + '分</div>' +
+      '</div>';
+    }).join('');
+  }).catch(function() {
+    document.getElementById('adminHazardList').innerHTML = '<div class="admin-empty">⚠️ 加载失败，请刷新重试</div>';
+  });
+}
+
+function showAdminHazardDetail(id) {
+  api('GET', '/api/hazards/' + id).then(function(h) {
+    if (!h || h.success === false) return;
+    document.getElementById('mTitle').textContent = h.title;
+    var imgHtml = h.photoPath ? '<img src="' + h.photoPath + '" class="admin-detail-img">' : '';
+    var rectImgHtml = h.rectifyPhotoPath ? '<img src="' + h.rectifyPhotoPath + '" class="admin-detail-img">' : '';
+    document.getElementById('mBody').innerHTML =
+      '<div class="detail-row"><div class="detail-label">类别</div><div class="detail-value" style="color:' + CAT_COLORS[h.category] + ';font-weight:700">' + h.category + '</div></div>' +
+      '<div class="detail-row"><div class="detail-label">等级</div><div class="detail-value">' + levelBadge(h.level) + (h.levelConfidence ? ' <span style="font-size:10px;color:#7C4DFF">🤖智能识别</span>' : '') + '</div></div>' +
+      (h.levelLaw ? '<div class="detail-row"><div class="detail-label">法规依据</div><div class="detail-value" style="font-size:12px;color:#666">' + h.levelLaw + '</div></div>' : '') +
+      (h.levelDesc ? '<div class="detail-row"><div class="detail-label">判定说明</div><div class="detail-value" style="font-size:12px;color:#666">' + h.levelDesc + '</div></div>' : '') +
+      (h.levelKeywords ? '<div class="detail-row"><div class="detail-label">匹配关键词</div><div class="detail-value" style="font-size:12px">' + h.levelKeywords.split('、').map(function(k) { return '<span style="display:inline-block;background:#FFF3E0;color:#E65100;padding:1px 6px;border-radius:4px;margin:2px;font-size:11px">' + k + '</span>'; }).join('') + '</div></div>' : '') +
+      '<div class="detail-row"><div class="detail-label">上报人</div><div class="detail-value">' + h.reporterName + '（' + h.storeName + '）</div></div>' +
+      '<div class="detail-row"><div class="detail-label">位置</div><div class="detail-value">' + h.location + '</div></div>' +
+      '<div class="detail-row"><div class="detail-label">描述</div><div class="detail-value">' + h.description + '</div></div>' +
+      '<div class="detail-row"><div class="detail-label">上报时间</div><div class="detail-value">' + (h.createdAt || '-') + '</div></div>' +
+      '<div class="detail-row"><div class="detail-label">状态</div><div class="detail-value">' + (h.status === 'completed' ? '✅ 已整改' : '⏳ 待整改') + '</div></div>' +
+      imgHtml +
+      '<div class="score-row"><div class="score-item"><div class="sv">' + (h.discoveryScore || 0) + '</div><div class="sl">发现积分</div></div><div class="score-item"><div class="sv">' + (h.rectifyScore || 0) + '</div><div class="sl">整改积分</div></div><div class="score-item"><div class="sv">' + ((h.discoveryScore || 0) + (h.rectifyScore || 0)) + '</div><div class="sl">合计</div></div></div>' +
+      (h.status === 'completed' ? '<div class="divider"></div><div class="detail-row"><div class="detail-label" style="color:var(--green);font-weight:700">整改说明</div><div class="detail-value">' + h.rectifyNote + '</div></div>' + rectImgHtml + '<div class="detail-row"><div class="detail-label">整改时间</div><div class="detail-value">' + (h.rectifiedAt || '-') + '</div></div>' : '');
+    document.getElementById('mRectifySection').innerHTML = '<div style="margin-top:16px"><button onclick="confirmDeleteHazard(\'' + h.id + '\',\'' + h.title.replace(/'/g, "\\'") + '\')" style="width:100%;padding:10px;border:1px solid #e63946;border-radius:10px;background:#fff;color:#e63946;font-size:14px;font-weight:600;cursor:pointer">🗑️ 删除此隐患</button></div>';
+    document.getElementById('hazardModal').classList.add('open');
+  }).catch(function() { showToast('加载失败'); });
+}
+
+function renderAdminUsers() {
+  Promise.all([api('GET', '/api/users'), api('GET', '/api/hazards')]).then(function(results) {
+    var users = results[0];
+    var hazards = results[1];
+    var list = document.getElementById('adminUserList');
+    if (!users.length) { list.innerHTML = '<div class="admin-empty">👷 暂无人员数据</div>'; return; }
+    list.innerHTML = users.map(function(u) {
+      var uH = hazards.filter(function(h) { return h.reporterId === u.id; });
+      var score = uH.reduce(function(s, h) { return s + (h.discoveryScore || 0) + (h.rectifyScore || 0); }, 0);
+      return '<div class="admin-list-item" style="position:relative"><div class="ali-top"><div class="ali-title">' + u.name + '</div><div style="color:#E65100;font-weight:800">' + score + '分</div></div>' +
+        '<div class="ali-meta">📱 ' + u.phone + ' &nbsp;|&nbsp; ' + u.storeCity + ' · ' + u.storeName + ' &nbsp;|&nbsp; ' + u.role + ' &nbsp;|&nbsp; 发现' + uH.length + '条 / 整改' + uH.filter(function(h) { return h.status === 'completed'; }).length + '条</div>' +
+        '<button onclick="confirmDeleteUser(\'' + u.id + '\',\'' + u.name.replace(/'/g, "\\'") + '\',' + uH.length + ')" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:1px solid #e63946;border-radius:8px;color:#e63946;font-size:12px;padding:4px 10px;cursor:pointer">🗑️删除</button></div>';
+    }).join('');
+  }).catch(function() { document.getElementById('adminUserList').innerHTML = '<div class="admin-empty">⚠️ 加载失败</div>'; });
+}
+
+function switchAdminRankTab(mode) {
+  adminRankTabMode = mode;
+  document.getElementById('adminRankTabPerson').classList.toggle('active', mode === 'person');
+  document.getElementById('adminRankTabStore').classList.toggle('active', mode === 'store');
+  renderAdminRanking();
+}
+
+function renderAdminRanking() {
+  var list = document.getElementById('adminRankList');
+  if (adminRankTabMode === 'person') {
+    api('GET', '/api/scores/ranking').then(function(rank) {
+      if (!rank.length) { list.innerHTML = '<div class="admin-empty">🏆 暂无排行数据</div>'; return; }
+      list.innerHTML = rank.map(function(r, i) {
+        return '<div class="rank-item"><div class="rank-num ' + (i < 3 ? 'rank-' + (i + 1) : 'rank-n') + '">' + (i + 1) + '</div>' +
+          '<div class="rank-info"><div class="rank-name">' + r.name + '</div><div class="rank-store">' + r.storeCity + ' · ' + r.storeName + ' · 发现' + r.totalHazards + '条/整改' + r.completedHazards + '条</div></div>' +
+          '<div class="rank-score">' + r.totalScore + '<small>分</small></div></div>';
+      }).join('');
+    }).catch(function() { list.innerHTML = '<div class="admin-empty">⚠️ 加载失败</div>'; });
+  } else {
+    api('GET', '/api/scores/store-ranking').then(function(rank) {
+      if (!rank.length) { list.innerHTML = '<div class="admin-empty">🏆 暂无排行数据</div>'; return; }
+      list.innerHTML = rank.map(function(r, i) {
+        return '<div class="rank-item"><div class="rank-num ' + (i < 3 ? 'rank-' + (i + 1) : 'rank-n') + '">' + (i + 1) + '</div>' +
+          '<div class="rank-info"><div class="rank-name">' + r.storeName + '</div><div class="rank-store">' + r.storeCity + ' · 发现' + r.totalHazards + '条/整改' + r.completedHazards + '条</div></div>' +
+          '<div class="rank-score">' + r.totalScore + '<small>分</small></div></div>';
+      }).join('');
+    }).catch(function() { list.innerHTML = '<div class="admin-empty">⚠️ 加载失败</div>'; });
+  }
+}
+
+function renderAdminExportSummary() {
+  api('GET', '/api/admin/stats').then(function(s) {
+    document.getElementById('adminExportSummary').innerHTML =
+      '<div style="background:#fff;border-radius:12px;padding:14px;box-shadow:var(--shadow)">' +
+      '<div style="font-size:13px;font-weight:700;margin-bottom:10px">📋 数据汇总（服务器端实时数据）</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:var(--sub)">' +
+      '<div>参与人数：<strong style="color:#222">' + s.userCount + '人</strong></div>' +
+      '<div>隐患总数：<strong style="color:#222">' + s.hazardCount + '条</strong></div>' +
+      '<div>待整改：<strong style="color:#E65100">' + (s.hazardCount - s.completedCount) + '条</strong></div>' +
+      '<div>已整改：<strong style="color:#2E7D32">' + s.completedCount + '条</strong></div>' +
+      '<div>累计积分：<strong style="color:#E8362A">' + s.totalScore + '分</strong></div>' +
+      '</div></div>';
+  }).catch(function() {});
+}
+
+function adminExportHazards() { window.open(API_BASE + '/api/admin/export/hazards', '_blank'); showToast('📦 正在打包隐患数据+照片，请稍候...'); }
+function adminExportUsers() { window.open(API_BASE + '/api/admin/export/users', '_blank'); showToast('✅ 正在导出人员数据'); }
+function adminExportRanking() { window.open(API_BASE + '/api/admin/export/ranking', '_blank'); showToast('✅ 正在导出排行数据'); }
+
+function goReport(cat) {
+  selectedCat = cat;
+  selectedLevel = '';
+  photoPath = '';
+  photoFile = null;
+  aiAnalysisResult = null;
+  aiLevelConfirmed = false;
+  document.getElementById('fTitle').value = '';
+  document.getElementById('fLocation').value = '';
+  document.getElementById('fDesc').value = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.querySelectorAll('.level-btn').forEach(function(b) { b.className = 'level-btn'; });
+  document.getElementById('reportCatTitle').textContent = cat;
+  document.getElementById('catTipBox').textContent = CAT_TIPS[cat] || '';
+  document.getElementById('aiResultBox').classList.remove('show');
+  document.getElementById('aiAnalyzing').style.display = 'none';
+  document.getElementById('levelRow').style.display = 'none';
+  document.getElementById('err-level').classList.remove('show');
+  var submitError = document.getElementById('submitError'); if (submitError) submitError.style.display = 'none';
+  // 重置确认按钮
+  var confirmBtn = document.getElementById('aiConfirmBtn');
+  if (confirmBtn) { confirmBtn.textContent = '✅ 确认此等级'; confirmBtn.style.opacity = ''; confirmBtn.style.pointerEvents = ''; }
+  navTo('report');
+}
+
+// ======================== 首页数据 ========================
+function refreshHomeData() {
+  if (!currentUser) return;
+  document.getElementById('barName').textContent = currentUser.name;
+  document.getElementById('barStore').textContent = currentUser.storeCity + ' · ' + currentUser.storeName;
+
+  api('GET', '/api/hazards?reporterId=' + currentUser.id).then(function(myH) {
+    var totalScore = myH.reduce(function(s, h) { return s + (h.discoveryScore || 0) + (h.rectifyScore || 0); }, 0);
+    document.getElementById('barScore').innerHTML = '<div>' + totalScore + '</div><small>积分</small>';
+    document.getElementById('statTotal').textContent = myH.length;
+    document.getElementById('statDone').textContent = myH.filter(function(h) { return h.status === 'completed'; }).length;
+    document.getElementById('statScore').textContent = totalScore;
+  }).catch(function() {});
+
+  // 各类别计数 - 需要获取当前用户的所有隐患
+  api('GET', '/api/hazards?reporterId=' + currentUser.id).then(function(myH) {
+    ['消防安全','用电安全','施工安全','人员安全','建筑物安全'].forEach(function(cat) {
+      var el = document.getElementById('cnt-' + cat);
+      if (el) el.textContent = myH.filter(function(h) { return h.category === cat; }).length + ' 条隐患';
+    });
+  }).catch(function() {});
+}
+
+// ======================== 上报表单 ========================
+function selectLevel(lv) {
+  selectedLevel = lv;
+  document.querySelectorAll('.level-btn').forEach(function(b) {
+    b.className = 'level-btn';
+    if (b.id === 'lvl-' + lv) {
+      b.className = 'level-btn selected-' + (lv === '重大' ? 'major' : lv === '较大' ? 'significant' : 'general');
+    }
+  });
+  document.getElementById('err-level').classList.remove('show');
+  aiLevelConfirmed = true;
+}
+
+// ======================== AI 智能识别 ========================
+function onTitleInputChange() {
+  var el = document.getElementById('fTitle'); el.classList.remove('input-error');
+  var err = document.getElementById('err-fTitle'); if (err) err.classList.remove('show');
+  var summary = document.getElementById('submitError'); if (summary) summary.style.display = 'none';
+  triggerAiAnalysis();
+}
+function onDescInputChange() {
+  var el = document.getElementById('fDesc'); el.classList.remove('input-error');
+  var err = document.getElementById('err-fDesc'); if (err) err.classList.remove('show');
+  var summary = document.getElementById('submitError'); if (summary) summary.style.display = 'none';
+  triggerAiAnalysis();
+}
+function triggerAiAnalysis() {
+  if (aiAnalyzeTimer) clearTimeout(aiAnalyzeTimer);
+  aiAnalyzeTimer = setTimeout(function() { runAiAnalysis(); }, 600);
+}
+function runAiAnalysis() {
+  var title = document.getElementById('fTitle').value.trim();
+  var desc = document.getElementById('fDesc').value.trim();
+  if (!title && !desc) { document.getElementById('aiResultBox').classList.remove('show'); document.getElementById('aiAnalyzing').style.display = 'none'; return; }
+  document.getElementById('aiAnalyzing').style.display = 'block';
+  document.getElementById('aiResultBox').classList.remove('show');
+  setTimeout(function() {
+    var result = HazardRuleEngine.analyze(selectedCat, title, desc);
+    aiAnalysisResult = result;
+    document.getElementById('aiAnalyzing').style.display = 'none';
+    renderAiResult(result);
+  }, 500);
+}
+function renderAiResult(result) {
+  var box = document.getElementById('aiResultBox');
+  var tag = document.getElementById('aiResultTag');
+  var level = document.getElementById('aiResultLevel');
+  var law = document.getElementById('aiResultLaw');
+  var descEl = document.getElementById('aiResultDesc');
+  var kws = document.getElementById('aiResultKws');
+  var conf = document.getElementById('aiConfidence');
+  var confirmBtn = document.getElementById('aiConfirmBtn');
+  var levelClass = result.level === '重大' ? 'ai-tag-major' : result.level === '较大' ? 'ai-tag-significant' : 'ai-tag-general';
+  tag.className = 'ai-tag ' + levelClass;
+  tag.textContent = '🤖 智能识别';
+  level.className = 'ai-result-level ' + (result.level === '重大' ? 'level-major' : result.level === '较大' ? 'level-significant' : 'level-general');
+  level.textContent = result.level === '重大' ? '🔴 重大隐患' : result.level === '较大' ? '🟠 较大隐患' : '🟡 一般隐患';
+  var confText = result.confidence === 'high' ? '高置信度' : result.confidence === 'medium' ? '中置信度' : '低置信度 · 建议人工确认';
+  conf.textContent = confText;
+  law.textContent = '📜 法规依据：' + result.law;
+  descEl.textContent = '💡 ' + result.desc;
+  if (result.matchedKeywords && result.matchedKeywords.length > 0) {
+    kws.innerHTML = '🔑 匹配关键词：' + result.matchedKeywords.map(function(kw) { return '<span>' + kw + '</span>'; }).join('');
+    kws.style.display = '';
+  } else {
+    kws.innerHTML = '⚠️ 未匹配到明确关键词，建议手动选择等级';
+    kws.style.display = '';
+  }
+  confirmBtn.textContent = '✅ 确认「' + result.level + '隐患」';
+  confirmBtn.style.opacity = '';
+  confirmBtn.style.pointerEvents = '';
+  box.classList.add('show');
+  document.getElementById('levelRow').style.display = 'none';
+  selectedLevel = result.level;
+  aiLevelConfirmed = false;
+}
+function confirmAiLevel() {
+  aiLevelConfirmed = true;
+  document.getElementById('err-level').classList.remove('show');
+  var confirmBtn = document.getElementById('aiConfirmBtn');
+  confirmBtn.textContent = '✅ 已确认';
+  confirmBtn.style.opacity = '0.7';
+  confirmBtn.style.pointerEvents = 'none';
+  showToast('✅ 已确认等级：' + selectedLevel);
+}
+function showManualLevel() {
+  document.getElementById('levelRow').style.display = 'flex';
+  if (aiAnalysisResult && aiAnalysisResult.level) { selectLevel(aiAnalysisResult.level); }
+  document.getElementById('err-level').classList.remove('show');
+}
+function showFieldError(id, show) {
+  var el = document.getElementById(id);
+  var err = document.getElementById('err-' + id);
+  if (show) { el.classList.add('input-error'); if (err) err.classList.add('show'); }
+  else { el.classList.remove('input-error'); if (err) err.classList.remove('show'); }
+}
+function clearError(el) {
+  el.classList.remove('input-error');
+  var err = document.getElementById('err-' + el.id);
+  if (err) err.classList.remove('show');
+  var summary = document.getElementById('submitError');
+  if (summary) summary.style.display = 'none';
+}
+
+// ======================== 图片上传 ========================
+function previewPhoto(input) {
+  var file = input.files[0];
+  if (!file) return;
+  photoFile = file;
+  // 本地预览
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = document.getElementById('photoPreview');
+    img.src = e.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+// 上传图片到服务器，返回服务器路径
+function uploadPhoto(file) {
+  var formData = new FormData();
+  formData.append('photo', file);
+  return fetch(API_BASE + '/api/upload', { method: 'POST', body: formData }).then(function(r) { return r.json(); });
+}
+
+// ======================== 提交上报 ========================
+function submitReport() {
+  if (!currentUser) { showToast('请先登录'); return; }
+  var title = document.getElementById('fTitle').value.trim();
+  var location = document.getElementById('fLocation').value.trim();
+  var desc = document.getElementById('fDesc').value.trim();
+
+  ['fTitle','fLocation','fDesc'].forEach(function(id) { showFieldError(id, false); });
+  document.getElementById('err-level').classList.remove('show');
+
+  var hasError = false;
+  var firstErrorEl = null;
+  if (!title) { showFieldError('fTitle', true); hasError = true; firstErrorEl = firstErrorEl || document.getElementById('fTitle'); }
+  if (!selectedLevel || !aiLevelConfirmed) {
+    document.getElementById('err-level').classList.add('show');
+    if (!aiLevelConfirmed && selectedLevel) { document.getElementById('err-level').textContent = '请点击「确认此等级」按钮'; }
+    else { document.getElementById('err-level').textContent = '请确认危险等级'; }
+    hasError = true; firstErrorEl = firstErrorEl || document.getElementById('aiResultBox');
+  }
+  if (!location) { showFieldError('fLocation', true); hasError = true; firstErrorEl = firstErrorEl || document.getElementById('fLocation'); }
+  if (!desc) { showFieldError('fDesc', true); hasError = true; firstErrorEl = firstErrorEl || document.getElementById('fDesc'); }
+
+  if (hasError) {
+    var summary = document.getElementById('submitError');
+    summary.textContent = '请完善上方标红的信息后再提交';
+    summary.style.display = 'block';
+    if (firstErrorEl) { firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); firstErrorEl.focus({ preventScroll: true }); }
+    return;
+  }
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 提交中...';
+
+  // 先上传图片（如果有），再提交数据
+  var submitData = function(photoPathValue) {
+    api('POST', '/api/hazards', {
+      reporterId: currentUser.id,
+      reporterName: currentUser.name,
+      storeName: currentUser.storeName,
+      storeCity: currentUser.storeCity,
+      category: selectedCat,
+      level: selectedLevel,
+      levelLaw: aiAnalysisResult ? aiAnalysisResult.law : '',
+      levelDesc: aiAnalysisResult ? aiAnalysisResult.desc : '',
+      levelKeywords: aiAnalysisResult ? (aiAnalysisResult.matchedKeywords || []).join('、') : '',
+      levelConfidence: aiAnalysisResult ? aiAnalysisResult.confidence : '',
+      title: title, description: desc, location: location,
+      photoPath: photoPathValue || ''
+    }).then(function(r) {
+      if (r.success) {
+        showToast('✅ 上报成功！获得 ' + r.hazard.discoveryScore + ' 积分');
+        setTimeout(function() { navTo('my'); }, 1200);
+      } else {
+        showToast('上报失败：' + r.msg);
+        btn.disabled = false; btn.textContent = '📤 提交上报';
+      }
+    }).catch(function() {
+      showToast('网络错误，请检查网络后重试');
+      btn.disabled = false; btn.textContent = '📤 提交上报';
+    });
+  };
+
+  if (photoFile) {
+    uploadPhoto(photoFile).then(function(uploadResult) {
+      if (uploadResult.success) { submitData(uploadResult.path); }
+      else { showToast('图片上传失败，请重试'); btn.disabled = false; btn.textContent = '📤 提交上报'; }
+    }).catch(function() { showToast('图片上传失败，请重试'); btn.disabled = false; btn.textContent = '📤 提交上报'; });
+  } else {
+    submitData('');
+  }
+}
+
+// ======================== 我的隐患 ========================
+function renderMyHazards() {
+  if (!currentUser) return;
+  var list = document.getElementById('myHazardList');
+  api('GET', '/api/hazards?reporterId=' + currentUser.id).then(function(myH) {
+    if (!myH.length) { list.innerHTML = '<div class="empty-tip"><div class="empty-icon">📋</div>暂无记录，去发现隐患吧！</div>'; return; }
+    list.innerHTML = myH.map(function(h) {
+      return '<div class="hazard-card" onclick="showHazardDetail(\'' + h.id + '\')">' +
+        '<div class="hazard-top"><div class="hazard-cat-badge" style="background:' + (CAT_COLORS[h.category] || '#999') + '">' + h.category + '</div><div class="hazard-title">' + h.title + '</div></div>' +
+        '<div class="hazard-meta"><div class="hazard-time">📍 ' + h.location + ' · ' + (h.createdAt ? h.createdAt.slice(0, 10) : '') + '</div>' +
+        '<div class="status-badge ' + (h.status === 'completed' ? 'status-completed' : 'status-pending') + '">' + (h.status === 'completed' ? '✅ 已整改' : '⏳ 待整改') + '</div></div>' +
+        '<div class="hazard-score">🏅 已获 ' + ((h.discoveryScore || 0) + (h.rectifyScore || 0)) + ' 积分 <span style="font-weight:400;color:var(--sub);font-size:11px;margin-left:6px;">' + levelBadge(h.level) + '</span></div></div>';
+    }).join('');
+  }).catch(function() { list.innerHTML = '<div class="empty-tip">⚠️ 加载失败，请下拉刷新</div>'; });
+}
+
+function levelBadge(lv) { return lv === '重大' ? '🔴重大' : lv === '较大' ? '🟠较大' : '🟡一般'; }
+
+// ======================== 隐患详情弹窗 ========================
+var rectPhotoFile = null;
+function showHazardDetail(id) {
+  api('GET', '/api/hazards/' + id).then(function(h) {
+    if (!h || h.success === false) return;
+    document.getElementById('mTitle').textContent = h.title;
+    var imgHtml = h.photoPath ? '<img src="' + h.photoPath + '" class="detail-img">' : '';
+    var rectImgHtml = h.rectifyPhotoPath ? '<img src="' + h.rectifyPhotoPath + '" class="detail-img">' : '';
+    document.getElementById('mBody').innerHTML =
+      '<div class="score-row"><div class="score-item"><div class="sv">' + (h.discoveryScore || 0) + '</div><div class="sl">发现积分</div></div><div class="score-item"><div class="sv">' + (h.rectifyScore || 0) + '</div><div class="sl">整改积分</div></div><div class="score-item"><div class="sv">' + ((h.discoveryScore || 0) + (h.rectifyScore || 0)) + '</div><div class="sl">合计积分</div></div></div>' +
+      '<div class="detail-row"><div class="detail-label">类别</div><div class="detail-value" style="color:' + CAT_COLORS[h.category] + ';font-weight:700">' + h.category + '</div></div>' +
+      '<div class="detail-row"><div class="detail-label">等级</div><div class="detail-value">' + levelBadge(h.level) + (h.levelConfidence ? ' <span style="font-size:10px;color:#7C4DFF">🤖智能识别</span>' : '') + '</div></div>' +
+      (h.levelLaw ? '<div class="detail-row"><div class="detail-label">法规依据</div><div class="detail-value" style="font-size:12px;color:#666">' + h.levelLaw + '</div></div>' : '') +
+      (h.levelDesc ? '<div class="detail-row"><div class="detail-label">判定说明</div><div class="detail-value" style="font-size:12px;color:#666">' + h.levelDesc + '</div></div>' : '') +
+      '<div class="detail-row"><div class="detail-label">位置</div><div class="detail-value">' + h.location + '</div></div>' +
+      '<div class="detail-row"><div class="detail-label">描述</div><div class="detail-value">' + h.description + '</div></div>' +
+      '<div class="detail-row"><div class="detail-label">上报时间</div><div class="detail-value">' + (h.createdAt || '-') + '</div></div>' +
+      imgHtml +
+      (h.status === 'completed' ? '<div class="divider"></div><div class="detail-row"><div class="detail-label" style="color:var(--green);font-weight:700">整改说明</div><div class="detail-value">' + h.rectifyNote + '</div></div>' + rectImgHtml + '<div class="detail-row"><div class="detail-label">整改时间</div><div class="detail-value">' + (h.rectifiedAt || '-') + '</div></div>' : '');
+
+    var rectSection = document.getElementById('mRectifySection');
+    if (h.status !== 'completed' && currentUser && h.reporterId === currentUser.id) {
+      rectPhotoFile = null;
+      rectSection.innerHTML =
+        '<div class="divider"></div><div class="section-title"><div class="dot"></div>提交整改情况</div>' +
+        '<div class="form-group"><label class="form-label">整改说明 <span class="req">*</span></label><textarea class="form-textarea" id="rectNote" placeholder="描述已采取的整改措施、整改结果..."></textarea></div>' +
+        '<div class="form-group"><label class="form-label">整改后照片</label><div class="photo-upload" onclick="document.getElementById(\'rectPhotoInput\').click()"><div class="photo-upload-icon">📷</div><div>上传整改后照片</div></div>' +
+        '<input type="file" id="rectPhotoInput" accept="image/*" style="display:none" onchange="previewRectPhoto(this)"><img id="rectPhotoPreview" class="photo-preview"></div>' +
+        '<button class="btn-primary" onclick="submitRectify(\'' + h.id + '\')">✅ 提交整改完成</button>';
+    } else {
+      rectSection.innerHTML = '';
+    }
+    document.getElementById('hazardModal').classList.add('open');
+  }).catch(function() { showToast('加载失败'); });
+}
+
+function previewRectPhoto(input) {
+  var file = input.files[0]; if (!file) return;
+  rectPhotoFile = file;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = document.getElementById('rectPhotoPreview');
+    img.src = e.target.result; img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitRectify(id) {
+  var note = document.getElementById('rectNote').value.trim();
+  if (!note) { showToast('请填写整改说明'); return; }
+
+  var doSubmit = function(photoPathValue) {
+    api('PUT', '/api/hazards/' + id + '/rectify', { rectifyNote: note, rectifyPhotoPath: photoPathValue || '' }).then(function(r) {
+      if (r.success) {
+        showToast('🎉 整改完成！额外获得 ' + r.hazard.rectifyScore + ' 积分');
+        document.getElementById('hazardModal').classList.remove('open');
+        renderMyHazards();
+        refreshHomeData();
+      } else {
+        showToast('整改提交失败：' + (r.msg || '请重试'));
+      }
+    }).catch(function() { showToast('网络错误，请重试'); });
+  };
+
+  if (rectPhotoFile) {
+    uploadPhoto(rectPhotoFile).then(function(uploadResult) {
+      if (uploadResult.success) { doSubmit(uploadResult.path); }
+      else { showToast('图片上传失败'); }
+    }).catch(function() { showToast('图片上传失败'); });
+  } else {
+    doSubmit('');
+  }
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('hazardModal')) {
+    document.getElementById('hazardModal').classList.remove('open');
+  }
+}
+
+// ======================== 管理员删除功能 ========================
+var pendingDelete = { type: '', id: '', name: '' };
+
+function confirmDeleteHazard(id, title) {
+  pendingDelete = { type: 'hazard', id: id, name: title };
+  document.getElementById('deleteConfirmTitle').textContent = '确认删除此隐患？';
+  document.getElementById('deleteConfirmMsg').textContent = '「' + title + '」将被永久删除，此操作不可撤销';
+  document.getElementById('deleteConfirmModal').classList.add('open');
+}
+
+function confirmDeleteUser(id, name, hazardCount) {
+  pendingDelete = { type: 'user', id: id, name: name };
+  document.getElementById('deleteConfirmTitle').textContent = '确认删除此人员？';
+  document.getElementById('deleteConfirmMsg').textContent = '「' + name + '」及其' + hazardCount + '条隐患数据将被永久删除，此操作不可撤销';
+  document.getElementById('deleteConfirmModal').classList.add('open');
+}
+
+function closeDeleteConfirm(e) {
+  if (!e || e.target === document.getElementById('deleteConfirmModal')) {
+    document.getElementById('deleteConfirmModal').classList.remove('open');
+  }
+}
+
+function executeDelete() {
+  var btn = document.getElementById('deleteConfirmBtn');
+  btn.textContent = '删除中...';
+  btn.disabled = true;
+  var url = pendingDelete.type === 'hazard' ? '/api/admin/hazards/' + pendingDelete.id : '/api/admin/users/' + pendingDelete.id;
+  api('DELETE', url).then(function(r) {
+    btn.textContent = '删除';
+    btn.disabled = false;
+    closeDeleteConfirm();
+    if (r.success) {
+      showToast('✅ ' + (pendingDelete.type === 'hazard' ? '隐患' : '人员') + '已删除');
+      document.getElementById('hazardModal').classList.remove('open');
+      renderAdminAll();
+    } else {
+      showToast('❌ ' + (r.message || '删除失败'));
+    }
+  }).catch(function() {
+    btn.textContent = '删除';
+    btn.disabled = false;
+    showToast('❌ 网络错误');
+  });
+}
+
+// ======================== 排行榜 ========================
+var rankMode = 'person';
+function switchRankTab(mode) {
+  rankMode = mode;
+  document.getElementById('rankTabPerson').classList.toggle('active', mode === 'person');
+  document.getElementById('rankTabStore').classList.toggle('active', mode === 'store');
+  renderRanking();
+}
+function renderRanking() {
+  var list = document.getElementById('rankList');
+  if (rankMode === 'person') {
+    api('GET', '/api/scores/ranking').then(function(rank) {
+      if (!rank.length) { list.innerHTML = '<div class="empty-tip"><div class="empty-icon">🏆</div>暂无排行数据</div>'; return; }
+      list.innerHTML = rank.map(function(r, i) {
+        return '<div class="rank-item ' + (currentUser && r.userId === currentUser.id ? 'ring' : '') + '">' +
+          '<div class="rank-num ' + (i < 3 ? 'rank-' + (i + 1) : 'rank-n') + '">' + (i + 1) + '</div>' +
+          '<div class="rank-info"><div class="rank-name">' + r.name + (currentUser && r.userId === currentUser.id ? '（我）' : '') + '</div>' +
+          '<div class="rank-store">' + r.storeCity + ' · ' + r.storeName + ' · 发现' + r.totalHazards + '条/整改' + r.completedHazards + '条</div></div>' +
+          '<div class="rank-score">' + r.totalScore + '<small>分</small></div></div>';
+      }).join('');
+    }).catch(function() { list.innerHTML = '<div class="empty-tip">⚠️ 加载失败</div>'; });
+  } else {
+    api('GET', '/api/scores/store-ranking').then(function(rank) {
+      if (!rank.length) { list.innerHTML = '<div class="empty-tip"><div class="empty-icon">🏆</div>暂无排行数据</div>'; return; }
+      list.innerHTML = rank.map(function(r, i) {
+        return '<div class="rank-item"><div class="rank-num ' + (i < 3 ? 'rank-' + (i + 1) : 'rank-n') + '">' + (i + 1) + '</div>' +
+          '<div class="rank-info"><div class="rank-name">' + r.storeName + '</div><div class="rank-store">' + r.storeCity + ' · 发现' + r.totalHazards + '条/整改' + r.completedHazards + '条</div></div>' +
+          '<div class="rank-score">' + r.totalScore + '<small>分</small></div></div>';
+      }).join('');
+    }).catch(function() { list.innerHTML = '<div class="empty-tip">⚠️ 加载失败</div>'; });
+  }
+}
+
+// ======================== Toast ========================
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2200);
+}
+
+// ======================== 初始化 ========================
+(function() {
+  // 检测服务器连通性
+  fetch('/api/admin/stats').then(function(r) {
+    console.log('服务器连通正常');
+  }).catch(function() {
+    console.error('服务器连接失败');
+  });
+  var u = sessionStorage.getItem('sg_user');
+  if (u) { try { currentUser = JSON.parse(u); enterApp(); } catch(e) {} }
+})();
+</script>
+</body>
+</html>

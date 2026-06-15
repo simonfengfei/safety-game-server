@@ -1,0 +1,9 @@
+node_modules/
+data/
+uploads/
+*.log
+cf-err.txt
+cf-out.txt
+qr_b64.txt
+qr_svg.txt
+test-zip.zip
