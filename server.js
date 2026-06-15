@@ -2,8 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
-const archiver = require('archiver');
-const { ZipArchive } = archiver;
+const AdmZip = require('adm-zip');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -350,24 +349,21 @@ app.get('/api/admin/export/hazards', async function(req, res) {
     var csv = [header.map(function(v) { return '"' + v + '"'; }).join(','), rows.map(function(r) { return r.join(','); }).join('\n')].join('\n');
 
     // 创建ZIP文件（CSV + 照片）
-    var archive = new ZipArchive({ zlib: { level: 5 } });
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', 'attachment; filename=hazards_with_photos.zip');
-    archive.pipe(res);
-    // 添加CSV
-    archive.append('\uFEFF' + csv, { name: 'hazards_data.csv' });
+    var zip = new AdmZip();
+    zip.addFile('hazards_data.csv', Buffer.from('\uFEFF' + csv, 'utf-8'));
     // 添加照片（从数据库解码base64）
     hazards.forEach(function(h) {
       if (h.photo_data) {
-        var photoBuffer = Buffer.from(h.photo_data, 'base64');
-        archive.append(photoBuffer, { name: 'photos/' + h.id + '_report.jpg' });
+        zip.addFile('photos/' + h.id + '_report.jpg', Buffer.from(h.photo_data, 'base64'));
       }
       if (h.rectify_photo_data) {
-        var rectBuffer = Buffer.from(h.rectify_photo_data, 'base64');
-        archive.append(rectBuffer, { name: 'photos/' + h.id + '_rectify.jpg' });
+        zip.addFile('photos/' + h.id + '_rectify.jpg', Buffer.from(h.rectify_photo_data, 'base64'));
       }
     });
-    archive.finalize();
+    var zipBuffer = zip.toBuffer();
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename=hazards_with_photos.zip');
+    res.send(zipBuffer);
   } catch (e) {
     res.status(500).send('Export error: ' + e.message);
   }
