@@ -723,7 +723,8 @@ var selectedCat = '';
 var aiAnalysisResult = null;
 var aiLevelConfirmed = false;
 var aiAnalyzeTimer = null;
-var photoPath = '';  // 服务器端图片路径
+var photoBase64 = '';  // base64图片数据
+var photoMimetype = ''; // 图片MIME类型
 var photoFile = null; // 待上传的文件
 
 // API基础地址（自动检测）
@@ -936,7 +937,7 @@ function renderAdminHazards() {
       return;
     }
     list.innerHTML = hazards.map(function(h) {
-      var photoHtml = h.photoPath ? '<img src="' + h.photoPath + '" class="admin-detail-img" style="display:none" data-hid="' + h.id + '">' : '';
+      var photoHtml = h.hasPhoto ? '<img src="/api/hazards/' + h.id + '/photo" class="admin-detail-img" style="display:none" data-hid="' + h.id + '">' : '';
       return '<div class="admin-list-item" onclick="showAdminHazardDetail(\'' + h.id + '\')">' +
         '<div class="ali-top"><div>' +
           '<span class="admin-badge" style="background:' + (CAT_COLORS[h.category] || '#999') + '20;color:' + (CAT_COLORS[h.category] || '#999') + '">' + h.category + '</span> ' +
@@ -956,8 +957,8 @@ function showAdminHazardDetail(id) {
   api('GET', '/api/hazards/' + id).then(function(h) {
     if (!h || h.success === false) return;
     document.getElementById('mTitle').textContent = h.title;
-    var imgHtml = h.photoPath ? '<img src="' + h.photoPath + '" class="admin-detail-img">' : '';
-    var rectImgHtml = h.rectifyPhotoPath ? '<img src="' + h.rectifyPhotoPath + '" class="admin-detail-img">' : '';
+    var imgHtml = h.hasPhoto ? '<img src="/api/hazards/' + h.id + '/photo" class="admin-detail-img">' : '';
+    var rectImgHtml = h.hasRectifyPhoto ? '<img src="/api/hazards/' + h.id + '/rectify-photo" class="admin-detail-img">' : '';
     document.getElementById('mBody').innerHTML =
       '<div class="detail-row"><div class="detail-label">类别</div><div class="detail-value" style="color:' + CAT_COLORS[h.category] + ';font-weight:700">' + h.category + '</div></div>' +
       '<div class="detail-row"><div class="detail-label">等级</div><div class="detail-value">' + levelBadge(h.level) + (h.levelConfidence ? ' <span style="font-size:10px;color:#7C4DFF">🤖智能识别</span>' : '') + '</div></div>' +
@@ -1045,7 +1046,8 @@ function adminExportRanking() { window.open(API_BASE + '/api/admin/export/rankin
 function goReport(cat) {
   selectedCat = cat;
   selectedLevel = '';
-  photoPath = '';
+  photoBase64 = '';
+  photoMimetype = '';
   photoFile = null;
   aiAnalysisResult = null;
   aiLevelConfirmed = false;
@@ -1199,21 +1201,27 @@ function previewPhoto(input) {
   var file = input.files[0];
   if (!file) return;
   photoFile = file;
-  // 本地预览
+  photoMimetype = file.type || 'image/jpeg';
+  // 本地预览 + 读取base64
   var reader = new FileReader();
   reader.onload = function(e) {
     var img = document.getElementById('photoPreview');
     img.src = e.target.result;
     img.style.display = 'block';
+    // 去掉 "data:image/jpeg;base64," 前缀
+    photoBase64 = e.target.result.split(',')[1];
   };
   reader.readAsDataURL(file);
 }
 
-// 上传图片到服务器，返回服务器路径
-function uploadPhoto(file) {
-  var formData = new FormData();
-  formData.append('photo', file);
-  return fetch(API_BASE + '/api/upload', { method: 'POST', body: formData }).then(function(r) { return r.json(); });
+// 读取文件为base64
+function readFileAsBase64(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) { resolve({ data: e.target.result.split(',')[1], mimetype: file.type || 'image/jpeg' }); };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // ======================== 提交上报 ========================
@@ -1250,8 +1258,8 @@ function submitReport() {
   btn.disabled = true;
   btn.textContent = '⏳ 提交中...';
 
-  // 先上传图片（如果有），再提交数据
-  var submitData = function(photoPathValue) {
+  // 直接提交数据（含base64照片）
+  var submitData = function(pData, pMime) {
     api('POST', '/api/hazards', {
       reporterId: currentUser.id,
       reporterName: currentUser.name,
@@ -1264,7 +1272,8 @@ function submitReport() {
       levelKeywords: aiAnalysisResult ? (aiAnalysisResult.matchedKeywords || []).join('、') : '',
       levelConfidence: aiAnalysisResult ? aiAnalysisResult.confidence : '',
       title: title, description: desc, location: location,
-      photoPath: photoPathValue || ''
+      photoData: pData || '',
+      photoMimetype: pMime || ''
     }).then(function(r) {
       if (r.success) {
         showToast('✅ 上报成功！获得 ' + r.hazard.discoveryScore + ' 积分');
@@ -1280,12 +1289,11 @@ function submitReport() {
   };
 
   if (photoFile) {
-    uploadPhoto(photoFile).then(function(uploadResult) {
-      if (uploadResult.success) { submitData(uploadResult.path); }
-      else { showToast('图片上传失败，请重试'); btn.disabled = false; btn.textContent = '📤 提交上报'; }
-    }).catch(function() { showToast('图片上传失败，请重试'); btn.disabled = false; btn.textContent = '📤 提交上报'; });
+    readFileAsBase64(photoFile).then(function(result) {
+      submitData(result.data, result.mimetype);
+    }).catch(function() { showToast('图片读取失败，请重试'); btn.disabled = false; btn.textContent = '📤 提交上报'; });
   } else {
-    submitData('');
+    submitData('', '');
   }
 }
 
@@ -1313,8 +1321,8 @@ function showHazardDetail(id) {
   api('GET', '/api/hazards/' + id).then(function(h) {
     if (!h || h.success === false) return;
     document.getElementById('mTitle').textContent = h.title;
-    var imgHtml = h.photoPath ? '<img src="' + h.photoPath + '" class="detail-img">' : '';
-    var rectImgHtml = h.rectifyPhotoPath ? '<img src="' + h.rectifyPhotoPath + '" class="detail-img">' : '';
+    var imgHtml = h.hasPhoto ? '<img src="/api/hazards/' + h.id + '/photo" class="detail-img">' : '';
+    var rectImgHtml = h.hasRectifyPhoto ? '<img src="/api/hazards/' + h.id + '/rectify-photo" class="detail-img">' : '';
     document.getElementById('mBody').innerHTML =
       '<div class="score-row"><div class="score-item"><div class="sv">' + (h.discoveryScore || 0) + '</div><div class="sl">发现积分</div></div><div class="score-item"><div class="sv">' + (h.rectifyScore || 0) + '</div><div class="sl">整改积分</div></div><div class="score-item"><div class="sv">' + ((h.discoveryScore || 0) + (h.rectifyScore || 0)) + '</div><div class="sl">合计积分</div></div></div>' +
       '<div class="detail-row"><div class="detail-label">类别</div><div class="detail-value" style="color:' + CAT_COLORS[h.category] + ';font-weight:700">' + h.category + '</div></div>' +
@@ -1358,8 +1366,8 @@ function submitRectify(id) {
   var note = document.getElementById('rectNote').value.trim();
   if (!note) { showToast('请填写整改说明'); return; }
 
-  var doSubmit = function(photoPathValue) {
-    api('PUT', '/api/hazards/' + id + '/rectify', { rectifyNote: note, rectifyPhotoPath: photoPathValue || '' }).then(function(r) {
+  var doSubmit = function(pData, pMime) {
+    api('PUT', '/api/hazards/' + id + '/rectify', { rectifyNote: note, rectifyPhotoData: pData || '', rectifyPhotoMimetype: pMime || '' }).then(function(r) {
       if (r.success) {
         showToast('🎉 整改完成！额外获得 ' + r.hazard.rectifyScore + ' 积分');
         document.getElementById('hazardModal').classList.remove('open');
@@ -1372,12 +1380,11 @@ function submitRectify(id) {
   };
 
   if (rectPhotoFile) {
-    uploadPhoto(rectPhotoFile).then(function(uploadResult) {
-      if (uploadResult.success) { doSubmit(uploadResult.path); }
-      else { showToast('图片上传失败'); }
-    }).catch(function() { showToast('图片上传失败'); });
+    readFileAsBase64(rectPhotoFile).then(function(result) {
+      doSubmit(result.data, result.mimetype);
+    }).catch(function() { showToast('图片读取失败'); });
   } else {
-    doSubmit('');
+    doSubmit('', '');
   }
 }
 

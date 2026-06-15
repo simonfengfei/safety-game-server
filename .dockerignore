@@ -1,6 +1,5 @@
 node_modules
 data
-uploads
 *.log
 .git
 cf-err.txt
