@@ -256,7 +256,8 @@ app.put('/api/hazards/:id/rectify', async function(req, res) {
 app.get('/api/scores/ranking', async function(req, res) {
   try {
     var usersResult = await pool.query('SELECT * FROM users');
-    var hazardsResult = await pool.query('SELECT * FROM hazards');
+    // 只查统计字段，不加载照片 base64
+    var hazardsResult = await pool.query('SELECT reporter_id, status, discovery_score, rectify_score FROM hazards');
     var users = usersResult.rows;
     var hazards = hazardsResult.rows;
     var result = users.map(function(u) {
@@ -279,7 +280,8 @@ app.get('/api/scores/ranking', async function(req, res) {
 // ── 积分排行 - 门店 ──
 app.get('/api/scores/store-ranking', async function(req, res) {
   try {
-    var hazardsResult = await pool.query('SELECT * FROM hazards');
+    // 只查统计字段，不加载照片 base64
+    var hazardsResult = await pool.query('SELECT store_name, store_city, status, discovery_score, rectify_score FROM hazards');
     var hazards = hazardsResult.rows;
     var storeMap = {};
     hazards.forEach(function(h) {
@@ -320,19 +322,59 @@ app.get('/api/admin/stats', async function(req, res) {
 });
 
 // ── 导出隐患数据（含照片ZIP包） ──
+// 注意：不使用 SELECT * 加载照片字段，避免 Render 免费层 OOM
 app.get('/api/admin/export/hazards', async function(req, res) {
   try {
-    var hazardsResult = await pool.query('SELECT * FROM hazards ORDER BY created_at DESC');
+    // 1. 先查元数据（不含照片大字段）
+    var hazardsResult = await pool.query(
+      'SELECT id, reporter_id, store_name, store_city, reporter_name, category, level, level_confidence, level_law, level_desc, level_keywords, title, description, location, rectify_note, status, discovery_score, rectify_score, created_at, rectified_at, updated_at FROM hazards ORDER BY created_at DESC'
+    );
     var usersResult = await pool.query('SELECT * FROM users');
     var hazards = hazardsResult.rows;
     var users = usersResult.rows;
+    console.log('[export/hazards] 元数据加载完成, 共 ' + hazards.length + ' 条记录');
+
     var userMap = {};
     users.forEach(function(u) { userMap[u.id] = u; });
     var header = ['隐患ID','门店名称','城市','上报人','联系电话','安全类别','危险等级','等级判定方式','法规依据','判定说明','匹配关键词','隐患标题','隐患描述','位置','上报时间','整改状态','整改说明','整改时间','发现积分','整改积分','合计积分','隐患照片','整改照片'];
+
+    // 2. 分批加载照片，避免一次性载入所有 base64 导致内存溢出
+    var zip = new AdmZip();
+    var ids = hazards.map(function(h) { return h.id; });
+    var PHOTO_CHUNK = 10; // 每批 10 条记录
+    var reportPhotoMap = {};
+    var rectifyPhotoMap = {};
+    var totalPhotos = 0;
+
+    for (var i = 0; i < ids.length; i += PHOTO_CHUNK) {
+      var chunk = ids.slice(i, i + PHOTO_CHUNK);
+      var photoRes = await pool.query(
+        'SELECT id, photo_data, rectify_photo_data FROM hazards WHERE id = ANY($1) AND (photo_data IS NOT NULL OR rectify_photo_data IS NOT NULL)',
+        [chunk]
+      );
+      for (var pj = 0; pj < photoRes.rows.length; pj++) {
+        var pr = photoRes.rows[pj];
+        if (pr.photo_data) {
+          reportPhotoMap[pr.id] = true;
+          zip.addFile('photos/' + pr.id + '_report.jpg', Buffer.from(pr.photo_data, 'base64'));
+          totalPhotos++;
+        }
+        if (pr.rectify_photo_data) {
+          rectifyPhotoMap[pr.id] = true;
+          zip.addFile('photos/' + pr.id + '_rectify.jpg', Buffer.from(pr.rectify_photo_data, 'base64'));
+          totalPhotos++;
+        }
+      }
+      // 及时释放引用，帮助 GC
+      photoRes = null;
+    }
+    console.log('[export/hazards] 照片加载完成, 共 ' + totalPhotos + ' 张');
+
+    // 3. 生成 CSV
     var rows = hazards.map(function(h) {
       var u = userMap[h.reporter_id] || {};
-      var photoName = h.photo_data ? 'photos/' + h.id + '_report.jpg' : '无';
-      var rectPhotoName = h.rectify_photo_data ? 'photos/' + h.id + '_rectify.jpg' : '无';
+      var photoName = reportPhotoMap[h.id] ? 'photos/' + h.id + '_report.jpg' : '无';
+      var rectPhotoName = rectifyPhotoMap[h.id] ? 'photos/' + h.id + '_rectify.jpg' : '无';
       return [
         h.id, h.store_name, h.store_city, h.reporter_name, u.phone || '',
         h.category, h.level,
@@ -347,25 +389,17 @@ app.get('/api/admin/export/hazards', async function(req, res) {
       ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; });
     });
     var csv = [header.map(function(v) { return '"' + v + '"'; }).join(','), rows.map(function(r) { return r.join(','); }).join('\n')].join('\n');
-
-    // 创建ZIP文件（CSV + 照片）
-    var zip = new AdmZip();
     zip.addFile('hazards_data.csv', Buffer.from('\uFEFF' + csv, 'utf-8'));
-    // 添加照片（从数据库解码base64）
-    hazards.forEach(function(h) {
-      if (h.photo_data) {
-        zip.addFile('photos/' + h.id + '_report.jpg', Buffer.from(h.photo_data, 'base64'));
-      }
-      if (h.rectify_photo_data) {
-        zip.addFile('photos/' + h.id + '_rectify.jpg', Buffer.from(h.rectify_photo_data, 'base64'));
-      }
-    });
+
     var zipBuffer = zip.toBuffer();
+    var sizeMB = (zipBuffer.length / 1024 / 1024).toFixed(1);
+    console.log('[export/hazards] ZIP 生成完成, 大小 ' + sizeMB + 'MB');
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', 'attachment; filename=hazards_with_photos.zip');
     res.send(zipBuffer);
   } catch (e) {
-    res.status(500).send('Export error: ' + e.message);
+    console.error('[export/hazards] 导出失败:', e.message);
+    res.status(500).send('导出失败，可能是数据量较大。请尝试分批次导出，或联系管理员。错误: ' + e.message);
   }
 });
 
@@ -373,7 +407,8 @@ app.get('/api/admin/export/hazards', async function(req, res) {
 app.get('/api/admin/export/users', async function(req, res) {
   try {
     var usersResult = await pool.query('SELECT * FROM users ORDER BY created_at DESC');
-    var hazardsResult = await pool.query('SELECT * FROM hazards');
+    // 只查统计所需字段，不加载照片 base64 避免内存溢出
+    var hazardsResult = await pool.query('SELECT reporter_id, status, discovery_score, rectify_score FROM hazards');
     var users = usersResult.rows;
     var hazards = hazardsResult.rows;
     var header = ['姓名','手机号','城市','门店','岗位','发现隐患','整改完成','总积分','注册时间'];
@@ -395,7 +430,8 @@ app.get('/api/admin/export/users', async function(req, res) {
 // ── 导出CSV - 门店排行 ──
 app.get('/api/admin/export/ranking', async function(req, res) {
   try {
-    var hazardsResult = await pool.query('SELECT * FROM hazards');
+    // 只查统计所需字段，不加载照片 base64 避免内存溢出
+    var hazardsResult = await pool.query('SELECT store_name, store_city, status, discovery_score, rectify_score FROM hazards');
     var hazards = hazardsResult.rows;
     var storeMap = {};
     hazards.forEach(function(h) {
