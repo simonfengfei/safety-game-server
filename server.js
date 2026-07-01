@@ -327,7 +327,7 @@ app.get('/api/admin/export/hazards', async function(req, res) {
   try {
     // 1. 先查元数据（不含照片大字段）
     var hazardsResult = await pool.query(
-      'SELECT id, reporter_id, store_name, store_city, reporter_name, category, level, level_confidence, level_law, level_desc, level_keywords, title, description, location, rectify_note, status, discovery_score, rectify_score, created_at, rectified_at, updated_at FROM hazards ORDER BY created_at DESC'
+      'SELECT id, reporter_id, store_name, store_city, reporter_name, category, level, level_confidence, level_law, level_desc, level_keywords, title, description, location, rectify_note, status, discovery_score, rectify_score, created_at, rectified_at FROM hazards ORDER BY created_at DESC'
     );
     var usersResult = await pool.query('SELECT * FROM users');
     var hazards = hazardsResult.rows;
