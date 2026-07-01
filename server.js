@@ -2,7 +2,7 @@ const express = require('express');
 const { Pool } = require('pg');
 const cors = require('cors');
 const path = require('path');
-const AdmZip = require('adm-zip');
+const archiver = require('archiver');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -322,7 +322,7 @@ app.get('/api/admin/stats', async function(req, res) {
 });
 
 // ── 导出隐患数据（含照片ZIP包） ──
-// 注意：不使用 SELECT * 加载照片字段，避免 Render 免费层 OOM
+// 注意：使用 archiver 流式生成 ZIP，避免 Render 免费层 OOM
 app.get('/api/admin/export/hazards', async function(req, res) {
   try {
     // 0. 解析分次导出参数
@@ -355,14 +355,28 @@ app.get('/api/admin/export/hazards', async function(req, res) {
     users.forEach(function(u) { userMap[u.id] = u; });
     var header = ['隐患ID','门店名称','城市','上报人','联系电话','安全类别','危险等级','等级判定方式','法规依据','判定说明','匹配关键词','隐患标题','隐患描述','位置','上报时间','整改状态','整改说明','整改时间','发现积分','整改积分','合计积分','隐患照片','整改照片'];
 
-    // 2. 分批加载照片，避免一次性载入所有 base64 导致内存溢出
-    var zip = new AdmZip();
-    var ids = hazards.map(function(h) { return h.id; });
-    var PHOTO_CHUNK = 10; // 每批 10 条记录
-    var reportPhotoMap = {};
-    var rectifyPhotoMap = {};
-    var totalPhotos = 0;
+    // 2. 流式生成 ZIP
+    var archive = archiver('zip', { zlib: { level: 5 } });
+    archive.on('error', function(err) {
+      console.error('[export/hazards] archiver error:', err.message);
+      if (!res.headersSent) {
+        res.status(500).send('导出失败: ' + err.message);
+      }
+    });
+    archive.on('warning', function(err) {
+      console.warn('[export/hazards] archiver warning:', err.message);
+    });
 
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename=hazards_with_photos.zip');
+    archive.pipe(res);
+
+    // 3. 分批加载照片并流式写入 ZIP，同时记录哪些记录有照片
+    var ids = hazards.map(function(h) { return h.id; });
+    var PHOTO_CHUNK = 5; // 减小批次，进一步降低内存峰值
+    var reportPhotoSet = {};
+    var rectifyPhotoSet = {};
+    var totalPhotos = 0;
     for (var i = 0; i < ids.length; i += PHOTO_CHUNK) {
       var chunk = ids.slice(i, i + PHOTO_CHUNK);
       var photoParams = params.concat([chunk]);
@@ -379,26 +393,25 @@ app.get('/api/admin/export/hazards', async function(req, res) {
       for (var pj = 0; pj < photoRes.rows.length; pj++) {
         var pr = photoRes.rows[pj];
         if (pr.photo_data) {
-          reportPhotoMap[pr.id] = true;
-          zip.addFile('photos/' + pr.id + '_report.jpg', Buffer.from(pr.photo_data, 'base64'));
+          reportPhotoSet[pr.id] = true;
+          archive.append(Buffer.from(pr.photo_data, 'base64'), { name: 'photos/' + pr.id + '_report.jpg' });
           totalPhotos++;
         }
         if (pr.rectify_photo_data) {
-          rectifyPhotoMap[pr.id] = true;
-          zip.addFile('photos/' + pr.id + '_rectify.jpg', Buffer.from(pr.rectify_photo_data, 'base64'));
+          rectifyPhotoSet[pr.id] = true;
+          archive.append(Buffer.from(pr.rectify_photo_data, 'base64'), { name: 'photos/' + pr.id + '_rectify.jpg' });
           totalPhotos++;
         }
       }
-      // 及时释放引用，帮助 GC
       photoRes = null;
     }
-    console.log('[export/hazards] 照片加载完成, 共 ' + totalPhotos + ' 张');
+    console.log('[export/hazards] 照片流式写入完成, 共 ' + totalPhotos + ' 张');
 
-    // 3. 生成 CSV
+    // 4. 生成 CSV（此时已知道哪些记录有照片）
     var rows = hazards.map(function(h) {
       var u = userMap[h.reporter_id] || {};
-      var photoName = reportPhotoMap[h.id] ? 'photos/' + h.id + '_report.jpg' : '无';
-      var rectPhotoName = rectifyPhotoMap[h.id] ? 'photos/' + h.id + '_rectify.jpg' : '无';
+      var photoName = reportPhotoSet[h.id] ? 'photos/' + h.id + '_report.jpg' : '无';
+      var rectPhotoName = rectifyPhotoSet[h.id] ? 'photos/' + h.id + '_rectify.jpg' : '无';
       return [
         h.id, h.store_name, h.store_city, h.reporter_name, u.phone || '',
         h.category, h.level,
@@ -413,17 +426,16 @@ app.get('/api/admin/export/hazards', async function(req, res) {
       ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; });
     });
     var csv = [header.map(function(v) { return '"' + v + '"'; }).join(','), rows.map(function(r) { return r.join(','); }).join('\n')].join('\n');
-    zip.addFile('hazards_data.csv', Buffer.from('\uFEFF' + csv, 'utf-8'));
+    archive.append(Buffer.from('\uFEFF' + csv, 'utf-8'), { name: 'hazards_data.csv' });
 
-    var zipBuffer = zip.toBuffer();
-    var sizeMB = (zipBuffer.length / 1024 / 1024).toFixed(1);
-    console.log('[export/hazards] ZIP 生成完成, 大小 ' + sizeMB + 'MB');
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', 'attachment; filename=hazards_with_photos.zip');
-    res.send(zipBuffer);
+    // 5. 完成 ZIP
+    await archive.finalize();
+    console.log('[export/hazards] ZIP 流式导出完成');
   } catch (e) {
     console.error('[export/hazards] 导出失败:', e.message);
-    res.status(500).send('导出失败，可能是数据量较大。请尝试分批次导出，或联系管理员。错误: ' + e.message);
+    if (!res.headersSent) {
+      res.status(500).send('导出失败，可能是数据量较大。请尝试分批次导出，或联系管理员。错误: ' + e.message);
+    }
   }
 });
 
