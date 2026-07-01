@@ -325,9 +325,26 @@ app.get('/api/admin/stats', async function(req, res) {
 // 注意：不使用 SELECT * 加载照片字段，避免 Render 免费层 OOM
 app.get('/api/admin/export/hazards', async function(req, res) {
   try {
+    // 0. 解析分次导出参数
+    var startDate = req.query.start_date;
+    var endDate = req.query.end_date;
+    var params = [];
+    var whereClause = 'WHERE 1=1';
+    if (startDate) {
+      params.push(startDate);
+      whereClause += ' AND created_at >= $' + params.length;
+    }
+    if (endDate) {
+      // 包含 endDate 当天 23:59:59
+      params.push(endDate + ' 23:59:59');
+      whereClause += ' AND created_at <= $' + params.length;
+    }
+    console.log('[export/hazards] 导出参数:', { startDate: startDate, endDate: endDate });
+
     // 1. 先查元数据（不含照片大字段）
     var hazardsResult = await pool.query(
-      'SELECT id, reporter_id, store_name, store_city, reporter_name, category, level, level_confidence, level_law, level_desc, level_keywords, title, description, location, rectify_note, status, discovery_score, rectify_score, created_at, rectified_at FROM hazards ORDER BY created_at DESC'
+      'SELECT id, reporter_id, store_name, store_city, reporter_name, category, level, level_confidence, level_law, level_desc, level_keywords, title, description, location, rectify_note, status, discovery_score, rectify_score, created_at, rectified_at FROM hazards ' + whereClause + ' ORDER BY created_at DESC',
+      params
     );
     var usersResult = await pool.query('SELECT * FROM users');
     var hazards = hazardsResult.rows;
@@ -348,9 +365,16 @@ app.get('/api/admin/export/hazards', async function(req, res) {
 
     for (var i = 0; i < ids.length; i += PHOTO_CHUNK) {
       var chunk = ids.slice(i, i + PHOTO_CHUNK);
+      var photoParams = params.concat([chunk]);
+      var photoWhere = whereClause;
+      if (params.length > 0) {
+        photoWhere += ' AND id = ANY($' + photoParams.length + ')';
+      } else {
+        photoWhere = 'WHERE id = ANY($1)';
+      }
       var photoRes = await pool.query(
-        'SELECT id, photo_data, rectify_photo_data FROM hazards WHERE id = ANY($1) AND (photo_data IS NOT NULL OR rectify_photo_data IS NOT NULL)',
-        [chunk]
+        'SELECT id, photo_data, rectify_photo_data FROM hazards ' + photoWhere + ' AND (photo_data IS NOT NULL OR rectify_photo_data IS NOT NULL)',
+        photoParams
       );
       for (var pj = 0; pj < photoRes.rows.length; pj++) {
         var pr = photoRes.rows[pj];

@@ -583,6 +583,21 @@
       <div id="adminRankList"></div>
     </div>
     <div id="adminTabExport" style="display:none">
+      <div style="background:#fff;padding:14px;border-radius:10px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)">
+        <div style="font-weight:600;margin-bottom:10px;color:#b71c1c">📅 分次导出（按上报日期）</div>
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div>
+            <label style="display:block;font-size:12px;color:#666;margin-bottom:4px">开始日期</label>
+            <input type="date" id="exportStartDate" style="width:140px;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit">
+          </div>
+          <div>
+            <label style="display:block;font-size:12px;color:#666;margin-bottom:4px">结束日期</label>
+            <input type="date" id="exportEndDate" style="width:140px;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit">
+          </div>
+          <button class="admin-btn-red" style="padding:8px 16px" onclick="adminExportHazardsRange()">📦 分次导出</button>
+        </div>
+        <div style="font-size:12px;color:#888;margin-top:8px">💡 例如：先导出 6月1日-6月15日，再导出 6月16日-6月30日，减少单次打包大小。</div>
+      </div>
       <div class="admin-export-btns">
         <button class="admin-btn-red" onclick="adminExportHazards()">📦 导出全部隐患数据（含照片）</button>
         <button class="admin-btn-green" onclick="adminExportUsers()">⬇️ 导出人员积分数据（CSV）</button>
@@ -1039,7 +1054,21 @@ function renderAdminExportSummary() {
   }).catch(function() {});
 }
 
-function adminExportHazards() { window.open(API_BASE + '/api/admin/export/hazards', '_blank'); showToast('📦 正在打包隐患数据+照片，请稍候...'); }
+function adminExportHazards() { window.open(API_BASE + '/api/admin/export/hazards', '_blank'); showToast('📦 正在打包全部隐患数据+照片，请稍候...'); }
+function adminExportHazardsRange() {
+  var start = document.getElementById('exportStartDate').value;
+  var end = document.getElementById('exportEndDate').value;
+  if (!start && !end) {
+    showToast('请选择开始或结束日期，或直接使用「导出全部隐患数据」');
+    return;
+  }
+  var qs = [];
+  if (start) qs.push('start_date=' + encodeURIComponent(start));
+  if (end) qs.push('end_date=' + encodeURIComponent(end));
+  var url = API_BASE + '/api/admin/export/hazards?' + qs.join('&');
+  window.open(url, '_blank');
+  showToast('📦 正在打包 ' + (start || '最早') + ' ~ ' + (end || '今天') + ' 的隐患数据，请稍候...');
+}
 function adminExportUsers() { window.open(API_BASE + '/api/admin/export/users', '_blank'); showToast('✅ 正在导出人员数据'); }
 function adminExportRanking() { window.open(API_BASE + '/api/admin/export/ranking', '_blank'); showToast('✅ 正在导出排行数据'); }
 
