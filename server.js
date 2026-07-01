@@ -328,6 +328,7 @@ app.get('/api/admin/export/hazards', async function(req, res) {
     // 0. 解析分次导出参数
     var startDate = req.query.start_date;
     var endDate = req.query.end_date;
+    var includePhotos = req.query.include_photos !== '0' && req.query.include_photos !== 'false'; // 默认包含照片
     var params = [];
     var whereClause = 'WHERE 1=1';
     if (startDate) {
@@ -339,7 +340,7 @@ app.get('/api/admin/export/hazards', async function(req, res) {
       params.push(endDate + ' 23:59:59');
       whereClause += ' AND created_at <= $' + params.length;
     }
-    console.log('[export/hazards] 导出参数:', { startDate: startDate, endDate: endDate });
+    console.log('[export/hazards] 导出参数:', { startDate: startDate, endDate: endDate, includePhotos: includePhotos });
 
     // 1. 先查元数据（不含照片大字段）
     var hazardsResult = await pool.query(
@@ -355,7 +356,32 @@ app.get('/api/admin/export/hazards', async function(req, res) {
     users.forEach(function(u) { userMap[u.id] = u; });
     var header = ['隐患ID','门店名称','城市','上报人','联系电话','安全类别','危险等级','等级判定方式','法规依据','判定说明','匹配关键词','隐患标题','隐患描述','位置','上报时间','整改状态','整改说明','整改时间','发现积分','整改积分','合计积分','隐患照片','整改照片'];
 
-    // 2. 流式生成 ZIP
+    if (!includePhotos) {
+      // 快速导出：仅 CSV，不打包照片，避免大文件下载超时
+      var rows = hazards.map(function(h) {
+        var u = userMap[h.reporter_id] || {};
+        return [
+          h.id, h.store_name, h.store_city, h.reporter_name, u.phone || '',
+          h.category, h.level,
+          h.level_confidence ? '智能识别' : '手动选择',
+          h.level_law || '', h.level_desc || '', h.level_keywords || '',
+          h.title, h.description, h.location,
+          h.created_at ? new Date(h.created_at).toLocaleString('zh-CN') : '',
+          h.status === 'completed' ? '已整改' : '待整改',
+          h.rectify_note || '', h.rectified_at ? new Date(h.rectified_at).toLocaleString('zh-CN') : '',
+          h.discovery_score, h.rectify_score, (h.discovery_score || 0) + (h.rectify_score || 0),
+          '未导出（后台可查看）', '未导出（后台可查看）'
+        ].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; });
+      });
+      var csv = [header.map(function(v) { return '"' + v + '"'; }).join(','), rows.map(function(r) { return r.join(','); }).join('\n')].join('\n');
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename=hazards_data.csv');
+      res.send('\uFEFF' + csv);
+      console.log('[export/hazards] CSV 快速导出完成, 共 ' + hazards.length + ' 条');
+      return;
+    }
+
+    // 2. 流式生成 ZIP（含照片）
     var archive = archiver('zip', { zlib: { level: 5 } });
     archive.on('error', function(err) {
       console.error('[export/hazards] archiver error:', err.message);

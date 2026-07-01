@@ -594,9 +594,12 @@
             <label style="display:block;font-size:12px;color:#666;margin-bottom:4px">结束日期</label>
             <input type="date" id="exportEndDate" style="width:140px;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:14px;font-family:inherit">
           </div>
-          <button class="admin-btn-red" style="padding:8px 16px" onclick="adminExportHazardsRange()">📦 分次导出</button>
+          <button class="admin-btn-red" style="padding:8px 16px" onclick="adminExportHazardsRange('csv')">📄 分次导出 CSV</button>
+          <button class="admin-btn-red" style="padding:8px 16px" onclick="adminExportHazardsRange('zip')">📦 分次导出 ZIP</button>
         </div>
-        <div style="font-size:12px;color:#888;margin-top:8px">💡 例如：先导出 6月1日-6月15日，再导出 6月16日-6月30日，减少单次打包大小。</div>
+        <div style="font-size:12px;color:#888;margin-top:8px">
+          💡 建议：先导出 CSV（秒下，不含照片），若需照片再选 ZIP。ZIP 文件较大时，请把日期范围缩小到 7-10 天。
+        </div>
       </div>
       <div class="admin-export-btns">
         <button class="admin-btn-red" onclick="adminExportHazards()">📦 导出全部隐患数据（含照片）</button>
@@ -1055,7 +1058,7 @@ function renderAdminExportSummary() {
 }
 
 function adminExportHazards() { window.open(API_BASE + '/api/admin/export/hazards', '_blank'); showToast('📦 正在打包全部隐患数据+照片，请稍候...'); }
-function adminExportHazardsRange() {
+function adminExportHazardsRange(format) {
   var start = document.getElementById('exportStartDate').value;
   var end = document.getElementById('exportEndDate').value;
   if (!start && !end) {
@@ -1065,9 +1068,12 @@ function adminExportHazardsRange() {
   var qs = [];
   if (start) qs.push('start_date=' + encodeURIComponent(start));
   if (end) qs.push('end_date=' + encodeURIComponent(end));
+  var isCsv = format === 'csv';
+  if (isCsv) qs.push('include_photos=0');
   var url = API_BASE + '/api/admin/export/hazards?' + qs.join('&');
   window.open(url, '_blank');
-  showToast('📦 正在打包 ' + (start || '最早') + ' ~ ' + (end || '今天') + ' 的隐患数据，请稍候...');
+  var label = isCsv ? 'CSV' : 'ZIP';
+  showToast('📦 正在打包 ' + label + '：' + (start || '最早') + ' ~ ' + (end || '今天') + '，请稍候...');
 }
 function adminExportUsers() { window.open(API_BASE + '/api/admin/export/users', '_blank'); showToast('✅ 正在导出人员数据'); }
 function adminExportRanking() { window.open(API_BASE + '/api/admin/export/ranking', '_blank'); showToast('✅ 正在导出排行数据'); }
